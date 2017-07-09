@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<KSPMouseInterface>
+	<Interfaces>
+		<Interface Name="MainInterface" Alignment="Bottom" Margin="200, 0, 0, 0" X="50%" Y="100%" OpenCloseButtonHeight="12" PicPath="Data/Default/main/Main_Interface.png" HotSpotPicPath="Data/Default/main/Main_HotSpots.png">
+      <SubInterface Name="ActionGroups" Alignment="Right" X="224" Y="75" PicPath="Data/Default/actiongroups/ActionGroups_Interface.png" HotSpotPicPath="Data/Default/actiongroups/ActionGroups_HotSpots.png"/>
+			<!--<SubInterface Name="RCS-Panel" Alignment="Top" X="50" Y="12" PicPath="Data/Default/rcs/RCSPanel_Interface.png" HotSpotPicPath="Data/Default/rcs/RCSPanel_HotSpots.png"/>-->
+      <ColorActionMapping>
+        <!-- Main Panel -->
+        <!-- Common Buttons -->
+        <ColorAction Color="248, 9, 9" Action="OpenClose" Name="MainInterface">
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-openclose_hover.png" X="208" Y="0"/>
+        </ColorAction>
+        <!--<ColorAction Color="0, 80, 31" Action="OpenClose" Name="RCS-Panel">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-rcspanel_click.png" X="52" Y="15"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-rcspanel_hover.png" X="52" Y="15"/>
+        </ColorAction>-->
+		    <ColorAction Color="0, 95, 37" Action="OpenClose" Name="ActionGroups">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-actiongroups_click.png" X="211" Y="15"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-actiongroups_hover.png" X="211" Y="15"/>
+        </ColorAction>
+        <ColorAction Color="147, 17, 126" Action="RCS">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-rcs_click.png" X="52" Y="30"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-rcs_hover.png" X="52" Y="30"/>
+        </ColorAction>
+        <ColorAction Color="201, 9, 170" Action="SAS">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-sas_click.png" X="179" Y="30"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-sas_hover.png" X="179" Y="30"/>
+        </ColorAction>
+        <ColorAction Color="255, 255, 0" Action="NextStage">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-nextstage_click.png" X="265" Y="16"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-nextstage_hover.png" X="265" Y="16"/>
+        </ColorAction>
+        <!-- Vessel change (not implemented) -->
+        <ColorAction Color="0, 91, 36" Action="NextVessel">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-nextvessel_click.png" X="158" Y="14"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-nextvessel_hover.png" X="158" Y="14"/>
+        </ColorAction>
+		    <ColorAction Color="0, 88, 34" Action="PrevVessel">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-prevvessel_click.png" X="105" Y="14"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-prevvessel_hover.png" X="105" Y="14"/>
+        </ColorAction>
+        <!-- Throttle -->
+        <ColorAction Color="128, 80, 7" Action="ThrottleMax">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-throttlemax_click.png" X="18" Y="14"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-throttlemax_hover.png" X="18" Y="14"/>
+        </ColorAction>
+        <ColorAction Color="152, 94, 6" Action="ThrottleUp">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-throttleup_click.png" X="16" Y="61"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-throttleup_hover.png" X="16" Y="61"/>
+        </ColorAction>
+        <ColorAction Color="168, 104, 7" Action="ThrottleDown">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-throttledown_click.png" X="17" Y="127"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-throttledown_hover.png" X="17" Y="127"/>
+        </ColorAction>
+        <ColorAction Color="196, 122, 9" Action="ThrottleOff">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-throttleoff_click.png" X="17" Y="193"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-throttleoff_hover.png" X="17" Y="193"/>
+        </ColorAction>
+        <!-- Directions -->
+        <ColorAction Color="77, 104, 17" Action="PitchUp">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-navup_click.png" X="85" Y="30"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-navup_hover.png" X="85" Y="30"/>
+        </ColorAction>
+        <ColorAction Color="85, 116, 16" Action="PitchDown">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-navdown_click.png" X="85" Y="194"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-navdown_hover.png" X="85" Y="194"/>
+        </ColorAction>
+        <ColorAction Color="120, 164, 23" Action="YawRight">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-navright_click.png" X="217" Y="61"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-navright_hover.png" X="217" Y="61"/>
+        </ColorAction>
+        <ColorAction Color="100, 138, 16" Action="YawLeft">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-navleft.png" X="53" Y="61" TextureX="0" TextureY="0" TextureWidth="44" TextureHeight="145"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-navleft.png" X="53" Y="61" TextureX="44" TextureY="0" TextureWidth="44" TextureHeight="145"/>
+        </ColorAction>
+        <ColorAction Color="192, 221, 91" Action="RollRight">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-rollright_click.png" X="185" Y="163"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-rollright_hover.png" X="185" Y="163"/>
+        </ColorAction>
+        <ColorAction Color="208, 223, 153" Action="RollLeft">
+          <ButtonGraphic Action="Click" PicPath="Data/Default/main/btn/bn-rollleft_click.png" X="53" Y="158"/>
+          <ButtonGraphic Action="Hover" PicPath="Data/Default/main/btn/bn-rollleft_hover.png" X="53" Y="158"/>
+        </ColorAction>
+        <ColorAction Color="0, 0, 255" Action="AnalogCenter"/>
+        <ColorAction Color="0, 0, 166" Action="AnalogUp"/>
+        <ColorAction Color="0, 0, 133" Action="AnalogDown"/>
+        <ColorAction Color="0, 0, 222" Action="AnalogLeft"/>
+        <ColorAction Color="0, 0, 199" Action="AnalogRight"/>
+        <ColorAction Color="0, 0, 99" Action="AnalogUpLeft"/>
+        <ColorAction Color="0, 0, 77" Action="AnalogUpRight"/>
+        <ColorAction Color="0, 0, 88" Action="AnalogDownLeft"/>
+        <ColorAction Color="0, 0, 66" Action="AnalogDownRight"/>
+        <!-- RCS Panel -->
+        <!-- Directions -->
+        <ColorAction Color="30, 255, 30" Action="RCSPitchUp"/>
+        <ColorAction Color="40, 255, 40" Action="RCSPitchDown"/>
+        <ColorAction Color="20, 255, 20" Action="RCSYawRight"/>
+        <ColorAction Color="10, 255, 10" Action="RCSYawLeft"/>
+        <ColorAction Color="0, 20, 222" Action="RCSRollRight"/>
+        <ColorAction Color="0, 20, 199" Action="RCSRollLeft"/>
+        <ColorAction Color="0, 10, 255" Action="RCSAnalogCenter"/>
+        <ColorAction Color="0, 10, 166" Action="RCSAnalogUp"/>
+        <ColorAction Color="0, 10, 133" Action="RCSAnalogDown"/>
+        <ColorAction Color="0, 10, 222" Action="RCSAnalogLeft"/>
+        <ColorAction Color="0, 10, 199" Action="RCSAnalogRight"/>
+        <ColorAction Color="0, 10, 99" Action="RCSAnalogUpLeft"/>
+        <ColorAction Color="0, 10, 77" Action="RCSAnalogUpRight"/>
+        <ColorAction Color="0, 10, 88" Action="RCSAnalogDownLeft"/>
+        <ColorAction Color="0, 10, 66" Action="RCSAnalogDownRight"/>
+        <!-- Function Buttons (not implemented) -->
+        <ColorAction Color="245, 245, 0" Action="Func0"/>
+        <ColorAction Color="235, 235, 0" Action="Func1"/>
+        <ColorAction Color="225, 225, 0" Action="Func2"/>
+        <ColorAction Color="215, 215, 0" Action="Func3"/>
+        <!-- Actiongroup Panel -->
+        <ColorAction Color="0, 255, 0" Action="Settings"/>
+        <ColorAction Color="233, 0, 0" Action="Actiongroup0"/>
+        <ColorAction Color="188, 0, 0" Action="Actiongroup1"/>
+        <ColorAction Color="177, 0, 0" Action="Actiongroup2"/>
+        <ColorAction Color="166, 0, 0" Action="Actiongroup3"/>
+        <ColorAction Color="155, 0, 0" Action="Actiongroup4"/>
+        <ColorAction Color="144, 0, 0" Action="Actiongroup5"/>
+        <ColorAction Color="133, 0, 0" Action="Actiongroup6"/>
+        <ColorAction Color="122, 0, 0" Action="Actiongroup7"/>
+        <ColorAction Color="111, 0, 0" Action="Actiongroup8"/>
+        <ColorAction Color="99, 0, 0" Action="Actiongroup9"/>
+      </ColorActionMapping>
+		</Interface>
+	</Interfaces>
+</KSPMouseInterface>

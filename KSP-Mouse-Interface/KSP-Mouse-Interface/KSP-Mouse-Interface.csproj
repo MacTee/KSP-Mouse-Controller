@@ -1,0 +1,125 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{089F1415-66C9-45EE-8A91-79689EFE4C35}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>KSPMouseInterface</RootNamespace>
+    <AssemblyName>KSPMouseInterface</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\Build\GameData\KSPMouseInterface\Plugins\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\Build\GameData\KSPMouseInterface\Plugins\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\..\KSP_Plugins\KSP_win64\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\..\KSP_Plugins\KSP_win64\KSP_x64_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="GUIInterface.cs" />
+    <Compile Include="GUIInterfaceState.cs" />
+    <Compile Include="KSPMouseInterface.cs" />
+    <Compile Include="Utilities.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="data\Default\actiongroups\ActionGroups_Interface.png" />
+    <Content Include="data\Default\actiongroups\ActionGroups_HotSpots.png" />
+    <Content Include="data\Default\main\btn\bn-actiongroups_click.png" />
+    <Content Include="data\Default\main\btn\bn-actiongroups_hover.png" />
+    <Content Include="data\Default\main\btn\bn-navdown_click.png" />
+    <Content Include="data\Default\main\btn\bn-navdown_hover.png" />
+    <Content Include="data\Default\main\btn\bn-navleft.png" />
+    <Content Include="data\Default\main\btn\bn-navleft_click.png" />
+    <Content Include="data\Default\main\btn\bn-navleft_hover.png" />
+    <Content Include="data\Default\main\btn\bn-navright_click.png" />
+    <Content Include="data\Default\main\btn\bn-navright_hover.png" />
+    <Content Include="data\Default\main\btn\bn-navup_click.png" />
+    <Content Include="data\Default\main\btn\bn-navup_hover.png" />
+    <Content Include="data\Default\main\btn\bn-nextstage_click.png" />
+    <Content Include="data\Default\main\btn\bn-nextstage_hover.png" />
+    <Content Include="data\Default\main\btn\bn-nextvessel_click.png" />
+    <Content Include="data\Default\main\btn\bn-nextvessel_hover.png" />
+    <Content Include="data\Default\main\btn\bn-openclose_hover.png" />
+    <Content Include="data\Default\main\btn\bn-prevvessel_click.png" />
+    <Content Include="data\Default\main\btn\bn-prevvessel_hover.png" />
+    <Content Include="data\Default\main\btn\bn-rcspanel_click.png" />
+    <Content Include="data\Default\main\btn\bn-rcspanel_hover.png" />
+    <Content Include="data\Default\main\btn\bn-rcs_click.png" />
+    <Content Include="data\Default\main\btn\bn-rcs_hover.png" />
+    <Content Include="data\Default\main\btn\bn-rollleft_click.png" />
+    <Content Include="data\Default\main\btn\bn-rollleft_hover.png" />
+    <Content Include="data\Default\main\btn\bn-rollright_click.png" />
+    <Content Include="data\Default\main\btn\bn-rollright_hover.png" />
+    <Content Include="data\Default\main\btn\bn-sas_click.png" />
+    <Content Include="data\Default\main\btn\bn-sas_hover.png" />
+    <Content Include="data\Default\main\btn\bn-throttledown_click.png" />
+    <Content Include="data\Default\main\btn\bn-throttledown_hover.png" />
+    <Content Include="data\Default\main\btn\bn-throttlemax_click.png" />
+    <Content Include="data\Default\main\btn\bn-throttlemax_hover.png" />
+    <Content Include="data\Default\main\btn\bn-throttleoff_click.png" />
+    <Content Include="data\Default\main\btn\bn-throttleoff_hover.png" />
+    <Content Include="data\Default\main\btn\bn-throttleup_click.png" />
+    <Content Include="data\Default\main\btn\bn-throttleup_hover.png" />
+    <Content Include="data\Default\main\Main_Interface.png" />
+    <Content Include="data\Default\main\Main_HotSpots.png" />
+    <Content Include="data\Default\rcs\RCSPanel_Interface.png" />
+    <Content Include="data\Default\rcs\RCSPanel_HotSpots.png" />
+    <Content Include="data\KSPMouseInterface_Settings.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="doc\ReadMe.txt" />
+    <Content Include="doc\ToDo.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pics\KSPMouseInterface_GIMP.xcf" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>xcopy /E /Y "$(SolutionDir)KSP-Mouse-Interface\data" "$(SolutionDir)Build\GameData\KSPMouseInterface\data\"
+copy /Y "$(SolutionDir)KSP-Mouse-Interface\doc\ReadMe.txt" "$(SolutionDir)Build\GameData\KSPMouseInterface\ReadMe.txt"
+copy /Y "$(SolutionDir)KSP-Mouse-Interface.sln" "$(SolutionDir)Build\GameData\KSPMouseInterface\Source\KSP-Mouse-Interface.sln"
+xcopy /E /Y "$(SolutionDir)KSP-Mouse-Interface" "$(SolutionDir)Build\GameData\KSPMouseInterface\Source\KSP-Mouse-Interface\"
+rmdir /s /q "$(SolutionDir)Build\GameData\KSPMouseInterface\Source\KSP-Mouse-Interface\obj"
+del "$(SolutionDir)Build\GameData\KSPMouseInterface\Plugins\KSPMouseInterface.pdb"</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

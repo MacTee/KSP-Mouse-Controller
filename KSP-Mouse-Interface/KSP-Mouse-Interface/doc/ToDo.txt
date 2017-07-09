@@ -1,0 +1,24 @@
+
+
+- flight control with blue pad (with analog input).
+- eva controls
+- skalieren des Interfaces.
+
+- help (how to make a interface, Available actions, how to change xml file)
+
+- Interface alignment (top, left and right)
+
+- RCS Panel Buttons anpassen (blau ist wieder analog) die anderen die 6 richtungen.
+
+Settings:
+- Zwischen verschiedenen Interface Designs wechseln kann.
+- Die Pitch (Up/Down) Kontrolle invertieren kann (Funktion wie bei den Tasten W & S).
+- Vor oder hinter kerbals rendern?
+- 
+
+
+Probleme:
+-------------
+- EVA kann ausgelöst werden wenn man auf die Pfeil-Rechts klick.
+
+- MechJeb läßt keine Schubkontrolle zu!??
