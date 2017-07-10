@@ -48,10 +48,19 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GUIInterface.cs" />
-    <Compile Include="GUIInterfaceState.cs" />
+    <Compile Include="classes\ButtonGraphic.cs" />
+    <Compile Include="classes\ColorAction.cs" />
+    <Compile Include="classes\Margin.cs" />
+    <Compile Include="classes\Size.cs" />
+    <Compile Include="enums\Actions.cs" />
+    <Compile Include="enums\Alignments.cs" />
+    <Compile Include="classes\Constants.cs" />
+    <Compile Include="enums\ButtonActions.cs" />
+    <Compile Include="enums\Directions.cs" />
+    <Compile Include="classes\GuiPanel.cs" />
+    <Compile Include="classes\GuiPanelState.cs" />
+    <Compile Include="classes\Parse.cs" />
     <Compile Include="KSPMouseInterface.cs" />
-    <Compile Include="Utilities.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

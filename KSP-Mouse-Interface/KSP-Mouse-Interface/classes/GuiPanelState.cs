@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace KSPMouseInterface
 {
-    public class GUIInterfaceState
+    public class GuiPanelState
     {
         private bool mOpenCloseCangeAllowed = true;
         private bool mOpenCloseDown = false;
@@ -55,13 +55,13 @@ namespace KSPMouseInterface
             }
         }
 
-        public MCDirections Yaw { get; set; }
-        public MCDirections Pitch { get; set; }
-        public MCDirections Roll { get; set; }
+        public Directions Yaw { get; set; }
+        public Directions Pitch { get; set; }
+        public Directions Roll { get; set; }
 
-        public MCDirections RCSYaw { get; set; }
-        public MCDirections RCSPitch { get; set; }
-        public MCDirections RCSRoll { get; set; }
+        public Directions RCSYaw { get; set; }
+        public Directions RCSPitch { get; set; }
+        public Directions RCSRoll { get; set; }
 
         private bool mNextStageCangeAllowed = true;
         private bool mNextStageDown = false;
@@ -92,8 +92,8 @@ namespace KSPMouseInterface
             }
         }
 
-        public MCDirections Throttle { get; set; }
-        public MCDirections ThrottleMax { get; set; }
+        public Directions Throttle { get; set; }
+        public Directions ThrottleMax { get; set; }
         public bool ThrottleOff { get; set; }
 
         private bool mRCSCangeAllowed = true;
@@ -398,7 +398,7 @@ namespace KSPMouseInterface
             }
         }
 
-#endregion
+        #endregion
 
         #region Func
 
@@ -515,7 +515,7 @@ namespace KSPMouseInterface
         {
             get
             {
-                return (Yaw != MCDirections.None || Pitch != MCDirections.None || Roll != MCDirections.None);
+                return (Yaw != Directions.None || Pitch != Directions.None || Roll != Directions.None);
             }
         }
 
@@ -589,7 +589,7 @@ namespace KSPMouseInterface
         }
 
 
-        public GUIInterfaceState()
+        public GuiPanelState()
         {
             Reset();
         }
@@ -600,18 +600,18 @@ namespace KSPMouseInterface
             OpenCloseDown = false;
             OpenCloseToggled = false;
 
-            Yaw = MCDirections.None;
-            Pitch = MCDirections.None;
-            Roll = MCDirections.None;
-            RCSYaw = MCDirections.None;
-            RCSPitch = MCDirections.None;
-            RCSRoll = MCDirections.None;
+            Yaw = Directions.None;
+            Pitch = Directions.None;
+            Roll = Directions.None;
+            RCSYaw = Directions.None;
+            RCSPitch = Directions.None;
+            RCSRoll = Directions.None;
 
             NextStageDown = false;
             NextStageToggled = false;
 
-            Throttle = MCDirections.None;
-            ThrottleMax = MCDirections.None;
+            Throttle = Directions.None;
+            ThrottleMax = Directions.None;
             ThrottleOff = false;
 
             RCSDown = false;

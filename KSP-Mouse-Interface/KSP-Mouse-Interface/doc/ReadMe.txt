@@ -1,4 +1,4 @@
-﻿KSP Mouse Controller v0.4.0 by Bastian Heinrich & Vardaaran - A mod to control KSP completely with a mouse.
+﻿KSP Mouse Interface v0.4.0 by Bastian Heinrich & Vardaaran - A mod to control KSP completely with a mouse.
 
 This mod adds a new control panel to KSP to control the active vessel with a mouse.
 We hope to help handicapped people, who can't use a keyboard, to enjoy KSP a great game.

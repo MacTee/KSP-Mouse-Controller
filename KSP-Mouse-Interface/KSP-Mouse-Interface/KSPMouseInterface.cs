@@ -11,20 +11,21 @@ namespace KSPMouseInterface
     {
         #region Member
 
-        GUIInterface mMCInterface = null;
+        GuiPanel currentPanel = null;
 
         // paths
-        static string mRoot = KSPUtil.ApplicationRootPath.Replace("\\", "/");
-        static string mPluginFolder = mRoot + "GameData/KSPMouseInterface";
-        static string mSettingsPath = mPluginFolder + "/Data/KSPMouseInterface_Settings.xml";
+        static string rootPath = KSPUtil.ApplicationRootPath.Replace("\\", "/");
+        static string pluginFolderPath = rootPath + "GameData/KSPMouseInterface";
+        static string settingsPath = pluginFolderPath + "/Data/KSPMouseInterface_Settings.xml";
 
         // last mouse position
-        Vector3 mMousePosition = new Vector3();
+        Vector3 currentMousePosition = new Vector3();
 
         // last window positions
-        Rect mDebugWindowPosition = new Rect(50, 0, 350, 500);
+        Rect debugWindowPosition = new Rect(50, 0, 350, 500);
 
-        Dictionary<string, GUIInterface> mInterfaces = new Dictionary<string, GUIInterface>();
+        Dictionary<string, GuiPanel> guiPanels = new Dictionary<string, GuiPanel>();
+        Dictionary<string, Texture2D> textures = new Dictionary<string, Texture2D>();
 
         #endregion
 
@@ -33,31 +34,31 @@ namespace KSPMouseInterface
         // called on scene start
         public void Start()
         {
-            LoadSettings(mSettingsPath.Replace("/", "\\"));
+            LoadSettings(settingsPath.Replace("/", "\\"));
 
-            if (mMCInterface != null)
+            if (currentPanel != null)
             {
                 // Load textures 
-                mTextures.Clear();
-                mMCInterface.TextureMC_Interface = LoadTexture(mMCInterface.PicPath);
-                mMCInterface.TextureMC_Interface_HotSpots = LoadTexture(mMCInterface.HotSpotPicPath);
+                textures.Clear();
+                currentPanel.Texture = LoadTexture(pluginFolderPath + "/" + currentPanel.TexturePath);
+                currentPanel.TextureHotSpots = LoadTexture(pluginFolderPath + "/" + currentPanel.HotSpotTexturePath);
 
-                foreach (var entry in mMCInterface.Subinterfaces)
+                foreach (var entry in currentPanel.Subpanels)
                 {
-                    entry.Value.TextureMC_Interface = LoadTexture(entry.Value.PicPath);
-                    entry.Value.TextureMC_Interface_HotSpots = LoadTexture(entry.Value.HotSpotPicPath);
+                    entry.Value.Texture = LoadTexture(pluginFolderPath + "/" + entry.Value.TexturePath);
+                    entry.Value.TextureHotSpots = LoadTexture(pluginFolderPath + "/" + entry.Value.HotSpotTexturePath);
                 }
 
-                foreach (var entry in mMCInterface.Color2ColorActionMapping)
+                foreach (var entry in currentPanel.Color2ColorActionMapping)
                 {
                     foreach (var button in entry.Value.ButtonGraphics)
-                        button.Value.Texture = LoadTexture(button.Value.PicPath);
+                        button.Value.Texture = LoadTexture(pluginFolderPath + "/" + button.Value.TexturePath);
                 }
 
                 // Calculate interface positions
-                mMCInterface.CalculateMainInterfacePos();
-                foreach (var inter in mMCInterface.Subinterfaces)
-                    inter.Value.CalculateChildInterfacePos();
+                currentPanel.CalculateMainPanelPos();
+                foreach (var inter in currentPanel.Subpanels)
+                    inter.Value.CalculateChildPanelPos();
 
                 // hook to vessel control
                 FlightGlobals.ActiveVessel.OnFlyByWire += UpdateControl;
@@ -68,24 +69,24 @@ namespace KSPMouseInterface
         public void OnGUI()
         {
             // get/adjust mouse position (0, 0 = bottom left corner)
-            mMousePosition = Input.mousePosition;
-            mMousePosition.y = Screen.height - Input.mousePosition.y;
+            currentMousePosition = Input.mousePosition;
+            currentMousePosition.y = Screen.height - Input.mousePosition.y;
 
-            if (mMCInterface != null)
+            if (currentPanel != null)
             {
                 // draw interface
-                foreach (var entry in mMCInterface.Subinterfaces)
-                    if (entry.Value.TextureMC_Interface != null && !mMCInterface.Collapsed)
-                        GUI.DrawTexture(entry.Value.InterfacePos, entry.Value.TextureMC_Interface);
+                foreach (var entry in currentPanel.Subpanels)
+                    if (entry.Value.Texture != null && !currentPanel.Collapsed)
+                        GUI.DrawTexture(entry.Value.PanelRect, entry.Value.Texture);
 
-                if (mMCInterface.TextureMC_Interface != null)
-                    GUI.DrawTexture(mMCInterface.InterfacePos, mMCInterface.TextureMC_Interface);
+                if (currentPanel.Texture != null)
+                    GUI.DrawTexture(currentPanel.PanelRect, currentPanel.Texture);
 
-                foreach (ButtonGraphic button in mMCInterface.ButtonsToDraw)
+                foreach (ButtonGraphic button in currentPanel.ButtonsToDraw)
                 {
                     Rect pos = button.Position;
-                    pos.x += button.ColorAction.Interface.InterfacePos.x;
-                    pos.y += button.ColorAction.Interface.InterfacePos.y;
+                    pos.x += button.ColorAction.Interface.PanelRect.x;
+                    pos.y += button.ColorAction.Interface.PanelRect.y;
 
                     if (button.HasTextureCoords)
                     {
@@ -97,10 +98,10 @@ namespace KSPMouseInterface
                 }
 
                 // draw settings/debug window
-                if (mMCInterface.ShowSettingsWindow)
+                if (currentPanel.ShowSettingsWindow)
                 {
                     GUI.skin = HighLogic.Skin;
-                    mDebugWindowPosition = GUILayout.Window(44835, mDebugWindowPosition, DrawWindow, "KSPMouseInterface - Debug Window", GUILayout.MinWidth(200));
+                    debugWindowPosition = GUILayout.Window(44835, debugWindowPosition, DrawWindow, "KSPMouseInterface - Debug Window", GUILayout.MinWidth(200));
                 }
             }
         }
@@ -108,6 +109,41 @@ namespace KSPMouseInterface
         #endregion
 
         #region private
+
+        private void LoadSettings(string path)
+        {
+            try
+            {
+                guiPanels = GuiPanel.CreateFromXml(path);
+
+                if (guiPanels.ContainsKey("Default"))
+                    currentPanel = guiPanels["Default"];
+
+                else if (guiPanels.Count > 0)
+                {
+                    foreach (var entry in guiPanels)
+                    {
+                        currentPanel = entry.Value;
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                print("ErrorMessage: " + ex.Message);
+            }
+        }
+        
+        private Texture2D LoadTexture(string path)
+        {
+            if (textures.ContainsKey(path))
+                return textures[path];
+            
+            WWW www = new WWW("file://" + path);
+            textures.Add(path, www.texture);
+
+            return www.texture;
+        }
 
         private void DrawWindow(int winID)
         {
@@ -123,25 +159,25 @@ namespace KSPMouseInterface
                     //GUILayout.Label("WindowPosition.Contains = (" + mWindowPosition.Contains(mMousePosition).ToString() + ")");
                     //GUILayout.Label("L Mouse Button = (" + Input.GetMouseButton(0).ToString() + ")");
                     //GUILayout.Label("Rel. Pic Pos = (" + ((int)mMousePosition.x - (int)mWindowPosition.x).ToString() + ", " + ((int)mMousePosition.y - (int)mWindowPosition.y).ToString() + ")");
-                    GUILayout.Label("Texture Pos = " + mMCInterface.States.TexCoords.ToString());
-                    GUILayout.Label("Color = " + mMCInterface.States.Color.ToString());
+                    GUILayout.Label("Texture Pos = " + currentPanel.States.TexCoords.ToString());
+                    GUILayout.Label("Color = " + currentPanel.States.Color.ToString());
                     GUILayout.Label("InterfaceStates:");
-                    GUILayout.Label("HasInput = " + mMCInterface.States.HasInput.ToString());
-                    GUILayout.Label("OpenClose = " + mMCInterface.States.OpenCloseDown.ToString());
+                    GUILayout.Label("HasInput = " + currentPanel.States.HasInput.ToString());
+                    GUILayout.Label("OpenClose = " + currentPanel.States.OpenCloseDown.ToString());
                     //GUILayout.Label("Func0 = " + mMCInterface.CurrentInterfaceStates.Func0Down.ToString());
                     //GUILayout.Label("Func1 = " + mMCInterface.CurrentInterfaceStates.Func1Down.ToString());
                     //GUILayout.Label("Func2 = " + mMCInterface.CurrentInterfaceStates.Func2Down.ToString());
                     //GUILayout.Label("Func3 = " + mMCInterface.CurrentInterfaceStates.Func3Down.ToString());
-                    GUILayout.Label("Yaw = " + mMCInterface.States.Yaw.ToString());
-                    GUILayout.Label("Pitch = " + mMCInterface.States.Pitch.ToString());
-                    GUILayout.Label("Roll = " + mMCInterface. States.Roll.ToString());
-                    GUILayout.Label("RCS = " + mMCInterface.States.RCSDown.ToString());
-                    GUILayout.Label("SAS = " + mMCInterface.States.SASDown.ToString());
-                    GUILayout.Label("NextStage = " + mMCInterface.States.NextStageDown.ToString());
-                    GUILayout.Label("ThrottleFast = " + mMCInterface.States.ThrottleMax.ToString());
-                    GUILayout.Label("Throttle = " + mMCInterface.States.Throttle.ToString());
-                    GUILayout.Label("ThrottleOff = " + mMCInterface.States.ThrottleOff.ToString());
-                    foreach (var entry in mMCInterface.Subinterfaces)
+                    GUILayout.Label("Yaw = " + currentPanel.States.Yaw.ToString());
+                    GUILayout.Label("Pitch = " + currentPanel.States.Pitch.ToString());
+                    GUILayout.Label("Roll = " + currentPanel. States.Roll.ToString());
+                    GUILayout.Label("RCS = " + currentPanel.States.RCSDown.ToString());
+                    GUILayout.Label("SAS = " + currentPanel.States.SASDown.ToString());
+                    GUILayout.Label("NextStage = " + currentPanel.States.NextStageDown.ToString());
+                    GUILayout.Label("ThrottleFast = " + currentPanel.States.ThrottleMax.ToString());
+                    GUILayout.Label("Throttle = " + currentPanel.States.Throttle.ToString());
+                    GUILayout.Label("ThrottleOff = " + currentPanel.States.ThrottleOff.ToString());
+                    foreach (var entry in currentPanel.Subpanels)
                     {
                         GUILayout.Label("Sub InterfaceStates (" + entry.Value.Name + "):");
                         GUILayout.Label("Texture Pos = " + entry.Value.States.TexCoords.ToString());
@@ -166,42 +202,45 @@ namespace KSPMouseInterface
             }
         }
 
+        // called every frame
         private void UpdateControl(FlightCtrlState flightCtrlState)
         {
-            if (mMCInterface != null)
+            if (currentPanel != null)
             {
-                UpdateInterfaceState();
+                UpdatePanelState();
 
                 // expand/collapse interface
-                mMCInterface.Collapsed = !mMCInterface.States.OpenCloseToggled;
+                currentPanel.Collapsed = !currentPanel.States.OpenCloseToggled;
 
-                foreach (var entry in mMCInterface.Subinterfaces)
+                foreach (var entry in currentPanel.Subpanels)
                     entry.Value.Collapsed = !entry.Value.States.OpenCloseToggled;
 
                 // next stage
-                if (mMCInterface.States.NextStageToggled && StageManager.StageCount > 0)
+                if (currentPanel.States.NextStageToggled && StageManager.StageCount > 0)
                     StageManager.ActivateNextStage();
 
                 // show/hide debug window.
-                mMCInterface.ShowSettingsWindow = mMCInterface.States.SettingsToggled;
+                currentPanel.ShowSettingsWindow = currentPanel.States.SettingsToggled;
+
+                var actionGroups = FlightGlobals.ActiveVessel.ActionGroups;
 
                 // de/activate RCS
-                FlightGlobals.ActiveVessel.ActionGroups.SetGroup(KSPActionGroup.RCS, mMCInterface.States.RCSToggled);
+                actionGroups.SetGroup(KSPActionGroup.RCS, currentPanel.States.RCSToggled);
 
                 // de/activate SAS
-                FlightGlobals.ActiveVessel.ActionGroups.SetGroup(KSPActionGroup.SAS, mMCInterface.States.SASToggled);
+                actionGroups.SetGroup(KSPActionGroup.SAS, currentPanel.States.SASToggled);
 
                 // set action group states.
-                FlightGlobals.ActiveVessel.ActionGroups.SetGroup(KSPActionGroup.Custom01, mMCInterface.States.ActionGroup0Toggled);
-                FlightGlobals.ActiveVessel.ActionGroups.SetGroup(KSPActionGroup.Custom02, mMCInterface.States.ActionGroup1Toggled);
-                FlightGlobals.ActiveVessel.ActionGroups.SetGroup(KSPActionGroup.Custom03, mMCInterface.States.ActionGroup2Toggled);
-                FlightGlobals.ActiveVessel.ActionGroups.SetGroup(KSPActionGroup.Custom04, mMCInterface.States.ActionGroup3Toggled);
-                FlightGlobals.ActiveVessel.ActionGroups.SetGroup(KSPActionGroup.Custom05, mMCInterface.States.ActionGroup4Toggled);
-                FlightGlobals.ActiveVessel.ActionGroups.SetGroup(KSPActionGroup.Custom06, mMCInterface.States.ActionGroup5Toggled);
-                FlightGlobals.ActiveVessel.ActionGroups.SetGroup(KSPActionGroup.Custom07, mMCInterface.States.ActionGroup6Toggled);
-                FlightGlobals.ActiveVessel.ActionGroups.SetGroup(KSPActionGroup.Custom08, mMCInterface.States.ActionGroup7Toggled);
-                FlightGlobals.ActiveVessel.ActionGroups.SetGroup(KSPActionGroup.Custom09, mMCInterface.States.ActionGroup8Toggled);
-                FlightGlobals.ActiveVessel.ActionGroups.SetGroup(KSPActionGroup.Custom10, mMCInterface.States.ActionGroup9Toggled);
+                actionGroups.SetGroup(KSPActionGroup.Custom01, currentPanel.States.ActionGroup0Toggled);
+                actionGroups.SetGroup(KSPActionGroup.Custom02, currentPanel.States.ActionGroup1Toggled);
+                actionGroups.SetGroup(KSPActionGroup.Custom03, currentPanel.States.ActionGroup2Toggled);
+                actionGroups.SetGroup(KSPActionGroup.Custom04, currentPanel.States.ActionGroup3Toggled);
+                actionGroups.SetGroup(KSPActionGroup.Custom05, currentPanel.States.ActionGroup4Toggled);
+                actionGroups.SetGroup(KSPActionGroup.Custom06, currentPanel.States.ActionGroup5Toggled);
+                actionGroups.SetGroup(KSPActionGroup.Custom07, currentPanel.States.ActionGroup6Toggled);
+                actionGroups.SetGroup(KSPActionGroup.Custom08, currentPanel.States.ActionGroup7Toggled);
+                actionGroups.SetGroup(KSPActionGroup.Custom09, currentPanel.States.ActionGroup8Toggled);
+                actionGroups.SetGroup(KSPActionGroup.Custom10, currentPanel.States.ActionGroup9Toggled);
 
                 UpdateThrottle();
 
@@ -210,89 +249,89 @@ namespace KSPMouseInterface
             }
         }
 
-        private void UpdateInterfaceState()
+        private void UpdatePanelState()
         {
             // get mouse position on hot spot texture.
-            mMCInterface.UpdateTexCoords(mMousePosition);
+            currentPanel.UpdateTexCoords(currentMousePosition);
 
-            foreach (var entry in mMCInterface.Subinterfaces)
-                entry.Value.UpdateTexCoords(mMousePosition);
+            foreach (var entry in currentPanel.Subpanels)
+                entry.Value.UpdateTexCoords(currentMousePosition);
 
-            mMCInterface.States.AnalogInput = false;
-            mMCInterface.States.RCSAnalogInput = false;
-            mMCInterface.States.ThrottleMax = MCDirections.None;
-            mMCInterface.States.Throttle = MCDirections.None;
-            mMCInterface.States.ThrottleOff = false;
-            mMCInterface.States.Yaw = MCDirections.None;
-            mMCInterface.States.Pitch = MCDirections.None;
-            mMCInterface.States.Roll = MCDirections.None;
-            mMCInterface.States.RCSYaw = MCDirections.None;
-            mMCInterface.States.RCSPitch = MCDirections.None;
-            mMCInterface.States.RCSRoll = MCDirections.None;
+            currentPanel.States.AnalogInput = false;
+            currentPanel.States.RCSAnalogInput = false;
+            currentPanel.States.ThrottleMax = Directions.None;
+            currentPanel.States.Throttle = Directions.None;
+            currentPanel.States.ThrottleOff = false;
+            currentPanel.States.Yaw = Directions.None;
+            currentPanel.States.Pitch = Directions.None;
+            currentPanel.States.Roll = Directions.None;
+            currentPanel.States.RCSYaw = Directions.None;
+            currentPanel.States.RCSPitch = Directions.None;
+            currentPanel.States.RCSRoll = Directions.None;
 
-            mMCInterface.ButtonsToDraw.Clear();
+            currentPanel.ButtonsToDraw.Clear();
 
-            if (mMCInterface.Color2ColorActionMapping.ContainsKey(mMCInterface.HotSpotColor.ToString()))
+            if (currentPanel.Color2ColorActionMapping.ContainsKey(currentPanel.HotSpotColor.ToString()))
             {
                 bool lButton = Input.GetMouseButton(0);
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.HotSpotColor.ToString()];
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.HotSpotColor.ToString()];
 
-                if (lButton && colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                if (lButton && colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
 
                 switch (colorAction.Action)
                 {
                     #region Settings
 
-                    case MCActions.Settings:
-                        mMCInterface.States.SettingsDown = lButton;
+                    case Actions.Settings:
+                        currentPanel.States.SettingsDown = lButton;
                         break;
 
                     #endregion
 
                     #region RCS
 
-                    case MCActions.RCS:
-                        mMCInterface.States.RCSDown = lButton;
+                    case Actions.RCS:
+                        currentPanel.States.RCSDown = lButton;
                         break;
 
                     #endregion
 
                     #region SAS
 
-                    case MCActions.SAS:
-                        mMCInterface.States.SASDown = lButton;
+                    case Actions.SAS:
+                        currentPanel.States.SASDown = lButton;
                         break;
 
                     #endregion
 
                     #region Next Stage
 
-                    case MCActions.NextStage:
-                        mMCInterface.States.NextStageDown = lButton;
+                    case Actions.NextStage:
+                        currentPanel.States.NextStageDown = lButton;
                         break;
 
                     #endregion
 
                     #region Vessel change
 
-                    case MCActions.NextVessel:
+                    case Actions.NextVessel:
                         break;
 
-                    case MCActions.PrevVessel:
+                    case Actions.PrevVessel:
                         break;
 
                     #endregion
 
                     #region Open/Close
 
-                    case MCActions.OpenClose:
-                        if (colorAction.Name == mMCInterface.Name)
-                            mMCInterface.States.OpenCloseDown = lButton;
+                    case Actions.OpenClose:
+                        if (colorAction.Name == currentPanel.Name)
+                            currentPanel.States.OpenCloseDown = lButton;
 
                         else
                         {
-                            foreach (GUIInterface subInterface in mMCInterface.Subinterfaces.Values)
+                            foreach (GuiPanel subInterface in currentPanel.Subpanels.Values)
                             {
                                 if (colorAction.Name == subInterface.Name)
                                     subInterface.States.OpenCloseDown = lButton;
@@ -304,132 +343,132 @@ namespace KSPMouseInterface
 
                     #region Throttle
 
-                    case MCActions.ThrottleMax:
+                    case Actions.ThrottleMax:
                         if (lButton)
-                            mMCInterface.States.ThrottleMax = MCDirections.Up;
+                            currentPanel.States.ThrottleMax = Directions.Up;
                         break;
 
-                    case MCActions.ThrottleUp:
+                    case Actions.ThrottleUp:
                         if (lButton)
-                            mMCInterface.States.Throttle = MCDirections.Up;
+                            currentPanel.States.Throttle = Directions.Up;
                         break;
 
-                    case MCActions.ThrottleDown:
+                    case Actions.ThrottleDown:
                         if (lButton)
-                            mMCInterface.States.Throttle = MCDirections.Down;
+                            currentPanel.States.Throttle = Directions.Down;
                         break;
 
-                    case MCActions.ThrottleOff:
+                    case Actions.ThrottleOff:
                         if (lButton)
-                            mMCInterface.States.ThrottleOff = true;
+                            currentPanel.States.ThrottleOff = true;
                         break;
 
                     #endregion
 
                     #region Pitch, Yaw, Roll
 
-                    case MCActions.PitchUp: // up
+                    case Actions.PitchUp: // up
                         if (lButton)
-                            mMCInterface.States.Pitch = MCDirections.Up;
+                            currentPanel.States.Pitch = Directions.Up;
                         break;
 
-                    case MCActions.PitchDown: // down
+                    case Actions.PitchDown: // down
                         if (lButton)
-                            mMCInterface.States.Pitch = MCDirections.Down;
+                            currentPanel.States.Pitch = Directions.Down;
                         break;
 
-                    case MCActions.YawRight: // right
+                    case Actions.YawRight: // right
                         if (lButton)
-                            mMCInterface.States.Yaw = MCDirections.Right;
+                            currentPanel.States.Yaw = Directions.Right;
                         break;
 
-                    case MCActions.YawLeft: // left
+                    case Actions.YawLeft: // left
                         if (lButton)
-                            mMCInterface.States.Yaw = MCDirections.Left;
+                            currentPanel.States.Yaw = Directions.Left;
                         break;
 
-                    case MCActions.RollRight:
+                    case Actions.RollRight:
                         if (lButton)
-                            mMCInterface.States.Roll = MCDirections.Right;
+                            currentPanel.States.Roll = Directions.Right;
                         break;
 
-                    case MCActions.RollLeft:
+                    case Actions.RollLeft:
                         if (lButton)
-                            mMCInterface.States.Roll = MCDirections.Left;
+                            currentPanel.States.Roll = Directions.Left;
                         break;
 
                     #endregion
 
                     #region Analog
 
-                    case MCActions.AnalogCenter:
+                    case Actions.AnalogCenter:
                         break;
 
-                    case MCActions.AnalogUp:
+                    case Actions.AnalogUp:
                         if (lButton)
                         {
-                            mMCInterface.States.AnalogInput = true;
-                            mMCInterface.States.Pitch = MCDirections.Up;
+                            currentPanel.States.AnalogInput = true;
+                            currentPanel.States.Pitch = Directions.Up;
                         }
                         break;
 
-                    case MCActions.AnalogDown:
+                    case Actions.AnalogDown:
                         if (lButton)
                         {
-                            mMCInterface.States.AnalogInput = true;
-                            mMCInterface.States.Pitch = MCDirections.Down;
+                            currentPanel.States.AnalogInput = true;
+                            currentPanel.States.Pitch = Directions.Down;
                         }
                         break;
 
-                    case MCActions.AnalogLeft:
+                    case Actions.AnalogLeft:
                         if (lButton)
                         {
-                            mMCInterface.States.AnalogInput = true;
-                            mMCInterface.States.Yaw = MCDirections.Left;
+                            currentPanel.States.AnalogInput = true;
+                            currentPanel.States.Yaw = Directions.Left;
                         }
                         break;
 
-                    case MCActions.AnalogRight:
+                    case Actions.AnalogRight:
                         if (lButton)
                         {
-                            mMCInterface.States.AnalogInput = true;
-                            mMCInterface.States.Yaw = MCDirections.Right;
+                            currentPanel.States.AnalogInput = true;
+                            currentPanel.States.Yaw = Directions.Right;
                         }
                         break;
 
-                    case MCActions.AnalogUpLeft:
+                    case Actions.AnalogUpLeft:
                         if (lButton)
                         {
-                            mMCInterface.States.AnalogInput = true;
-                            mMCInterface.States.Pitch = MCDirections.Up;
-                            mMCInterface.States.Yaw = MCDirections.Left;
+                            currentPanel.States.AnalogInput = true;
+                            currentPanel.States.Pitch = Directions.Up;
+                            currentPanel.States.Yaw = Directions.Left;
                         }
                         break;
 
-                    case MCActions.AnalogUpRight:
+                    case Actions.AnalogUpRight:
                         if (lButton)
                         {
-                            mMCInterface.States.AnalogInput = true;
-                            mMCInterface.States.Pitch = MCDirections.Up;
-                            mMCInterface.States.Yaw = MCDirections.Right;
+                            currentPanel.States.AnalogInput = true;
+                            currentPanel.States.Pitch = Directions.Up;
+                            currentPanel.States.Yaw = Directions.Right;
                         }
                         break;
 
-                    case MCActions.AnalogDownLeft:
+                    case Actions.AnalogDownLeft:
                         if (lButton)
                         {
-                            mMCInterface.States.AnalogInput = true;
-                            mMCInterface.States.Pitch = MCDirections.Down;
-                            mMCInterface.States.Yaw = MCDirections.Left;
+                            currentPanel.States.AnalogInput = true;
+                            currentPanel.States.Pitch = Directions.Down;
+                            currentPanel.States.Yaw = Directions.Left;
                         }
                         break;
 
-                    case MCActions.AnalogDownRight:
+                    case Actions.AnalogDownRight:
                         if (lButton)
                         {
-                            mMCInterface.States.AnalogInput = true;
-                            mMCInterface.States.Pitch = MCDirections.Down;
-                            mMCInterface.States.Yaw = MCDirections.Right;
+                            currentPanel.States.AnalogInput = true;
+                            currentPanel.States.Pitch = Directions.Down;
+                            currentPanel.States.Yaw = Directions.Right;
                         }
                         break;
 
@@ -437,107 +476,107 @@ namespace KSPMouseInterface
 
                     #region RCS Pitch, Yaw, Roll
 
-                    case MCActions.RCSPitchUp: // up
+                    case Actions.RCSPitchUp: // up
                         if (lButton)
-                            mMCInterface.States.RCSPitch = MCDirections.Up;
+                            currentPanel.States.RCSPitch = Directions.Up;
                         break;
 
-                    case MCActions.RCSPitchDown: // down
+                    case Actions.RCSPitchDown: // down
                         if (lButton)
-                            mMCInterface.States.RCSPitch = MCDirections.Down;
+                            currentPanel.States.RCSPitch = Directions.Down;
                         break;
 
-                    case MCActions.RCSYawRight: // right
+                    case Actions.RCSYawRight: // right
                         if (lButton)
-                            mMCInterface.States.RCSYaw = MCDirections.Right;
+                            currentPanel.States.RCSYaw = Directions.Right;
                         break;
 
-                    case MCActions.RCSYawLeft: // left
+                    case Actions.RCSYawLeft: // left
                         if (lButton)
-                            mMCInterface.States.RCSYaw = MCDirections.Left;
+                            currentPanel.States.RCSYaw = Directions.Left;
                         break;
 
-                    case MCActions.RCSRollRight:
+                    case Actions.RCSRollRight:
                         if (lButton)
-                            mMCInterface.States.RCSRoll = MCDirections.Right;
+                            currentPanel.States.RCSRoll = Directions.Right;
                         break;
 
-                    case MCActions.RCSRollLeft:
-                        mMCInterface.States.RCSRoll = MCDirections.Left;
+                    case Actions.RCSRollLeft:
+                        currentPanel.States.RCSRoll = Directions.Left;
                         break;
 
                     #endregion
 
                     #region RCS Analog
 
-                    case MCActions.RCSAnalogCenter:
+                    case Actions.RCSAnalogCenter:
                         break;
 
-                    case MCActions.RCSAnalogUp:
+                    case Actions.RCSAnalogUp:
                         if (lButton)
                         {
-                            mMCInterface.States.RCSAnalogInput = true;
-                            mMCInterface.States.RCSPitch = MCDirections.Up;
+                            currentPanel.States.RCSAnalogInput = true;
+                            currentPanel.States.RCSPitch = Directions.Up;
                         }
                         break;
 
-                    case MCActions.RCSAnalogDown:
+                    case Actions.RCSAnalogDown:
                         if (lButton)
                         {
-                            mMCInterface.States.RCSAnalogInput = true;
-                            mMCInterface.States.RCSPitch = MCDirections.Down;
+                            currentPanel.States.RCSAnalogInput = true;
+                            currentPanel.States.RCSPitch = Directions.Down;
                         }
                         break;
 
-                    case MCActions.RCSAnalogLeft:
+                    case Actions.RCSAnalogLeft:
                         if (lButton)
                         {
-                            mMCInterface.States.RCSAnalogInput = true;
-                            mMCInterface.States.RCSYaw = MCDirections.Left;
+                            currentPanel.States.RCSAnalogInput = true;
+                            currentPanel.States.RCSYaw = Directions.Left;
                         }
                         break;
 
-                    case MCActions.RCSAnalogRight:
+                    case Actions.RCSAnalogRight:
                         if (lButton)
                         {
-                            mMCInterface.States.RCSAnalogInput = true;
-                            mMCInterface.States.RCSYaw = MCDirections.Right;
+                            currentPanel.States.RCSAnalogInput = true;
+                            currentPanel.States.RCSYaw = Directions.Right;
                         }
                         break;
 
-                    case MCActions.RCSAnalogUpLeft:
+                    case Actions.RCSAnalogUpLeft:
                         if (lButton)
                         {
-                            mMCInterface.States.RCSAnalogInput = true;
-                            mMCInterface.States.RCSPitch = MCDirections.Up;
-                            mMCInterface.States.RCSYaw = MCDirections.Left;
+                            currentPanel.States.RCSAnalogInput = true;
+                            currentPanel.States.RCSPitch = Directions.Up;
+                            currentPanel.States.RCSYaw = Directions.Left;
                         }
                         break;
 
-                    case MCActions.RCSAnalogUpRight:
+                    case Actions.RCSAnalogUpRight:
                         if (lButton)
                         {
-                            mMCInterface.States.RCSAnalogInput = true;
-                            mMCInterface.States.RCSPitch = MCDirections.Up;
-                            mMCInterface.States.RCSYaw = MCDirections.Right;
+                            currentPanel.States.RCSAnalogInput = true;
+                            currentPanel.States.RCSPitch = Directions.Up;
+                            currentPanel.States.RCSYaw = Directions.Right;
                         }
                         break;
 
-                    case MCActions.RCSAnalogDownLeft:
+                    case Actions.RCSAnalogDownLeft:
                         if (lButton)
                         {
-                            mMCInterface.States.RCSAnalogInput = true;
-                            mMCInterface.States.RCSPitch = MCDirections.Down;
-                            mMCInterface.States.RCSYaw = MCDirections.Left;
+                            currentPanel.States.RCSAnalogInput = true;
+                            currentPanel.States.RCSPitch = Directions.Down;
+                            currentPanel.States.RCSYaw = Directions.Left;
                         }
                         break;
 
-                    case MCActions.RCSAnalogDownRight:
+                    case Actions.RCSAnalogDownRight:
                         if (lButton)
                         {
-                            mMCInterface.States.RCSAnalogInput = true;
-                            mMCInterface.States.RCSPitch = MCDirections.Down;
-                            mMCInterface.States.RCSYaw = MCDirections.Right;
+                            currentPanel.States.RCSAnalogInput = true;
+                            currentPanel.States.RCSPitch = Directions.Down;
+                            currentPanel.States.RCSYaw = Directions.Right;
                         }
                         break;
 
@@ -545,64 +584,64 @@ namespace KSPMouseInterface
 
                     #region ActionGroups
 
-                    case MCActions.Actiongroup0:
-                        mMCInterface.States.ActionGroup0Down = lButton;
+                    case Actions.Actiongroup0:
+                        currentPanel.States.ActionGroup0Down = lButton;
                         break;
 
-                    case MCActions.Actiongroup1:
-                        mMCInterface.States.ActionGroup1Down = lButton;
+                    case Actions.Actiongroup1:
+                        currentPanel.States.ActionGroup1Down = lButton;
                         break;
 
-                    case MCActions.Actiongroup2:
-                        mMCInterface.States.ActionGroup2Down = lButton;
+                    case Actions.Actiongroup2:
+                        currentPanel.States.ActionGroup2Down = lButton;
                         break;
 
-                    case MCActions.Actiongroup3:
-                        mMCInterface.States.ActionGroup3Down = lButton;
+                    case Actions.Actiongroup3:
+                        currentPanel.States.ActionGroup3Down = lButton;
                         break;
 
-                    case MCActions.Actiongroup4:
-                        mMCInterface.States.ActionGroup4Down = lButton;
+                    case Actions.Actiongroup4:
+                        currentPanel.States.ActionGroup4Down = lButton;
                         break;
 
-                    case MCActions.Actiongroup5:
-                        mMCInterface.States.ActionGroup5Down = lButton;
+                    case Actions.Actiongroup5:
+                        currentPanel.States.ActionGroup5Down = lButton;
                         break;
 
-                    case MCActions.Actiongroup6:
-                        mMCInterface.States.ActionGroup6Down = lButton;
+                    case Actions.Actiongroup6:
+                        currentPanel.States.ActionGroup6Down = lButton;
                         break;
 
-                    case MCActions.Actiongroup7:
-                        mMCInterface.States.ActionGroup7Down = lButton;
+                    case Actions.Actiongroup7:
+                        currentPanel.States.ActionGroup7Down = lButton;
                         break;
 
-                    case MCActions.Actiongroup8:
-                        mMCInterface.States.ActionGroup8Down = lButton;
+                    case Actions.Actiongroup8:
+                        currentPanel.States.ActionGroup8Down = lButton;
                         break;
 
-                    case MCActions.Actiongroup9:
-                        mMCInterface.States.ActionGroup9Down = lButton;
+                    case Actions.Actiongroup9:
+                        currentPanel.States.ActionGroup9Down = lButton;
                         break;
 
                     #endregion
 
                     #region Func
 
-                    case MCActions.Func0:
-                        mMCInterface.States.Func0Down = lButton;
+                    case Actions.Func0:
+                        currentPanel.States.Func0Down = lButton;
                         break;
 
-                    case MCActions.Func1:
-                        mMCInterface.States.Func1Down = lButton;
+                    case Actions.Func1:
+                        currentPanel.States.Func1Down = lButton;
                         break;
 
-                    case MCActions.Func2:
-                        mMCInterface.States.Func2Down = lButton;
+                    case Actions.Func2:
+                        currentPanel.States.Func2Down = lButton;
                         break;
 
-                    case MCActions.Func3:
-                        mMCInterface.States.Func3Down = lButton;
+                    case Actions.Func3:
+                        currentPanel.States.Func3Down = lButton;
                         break;
 
                     #endregion
@@ -611,8 +650,8 @@ namespace KSPMouseInterface
                 ResetToggleButtons(colorAction);
                 UpdateToggleButtonsState();
 
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Hover))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Hover]);
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Hover))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Hover]);
             }
             else
             {
@@ -623,744 +662,227 @@ namespace KSPMouseInterface
 
         private void UpdateToggleButtonsState()
         {
-            if (mMCInterface.States.SettingsToggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Settings))
+            if (currentPanel.States.SettingsToggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Settings))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Settings]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Settings]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
 
-            if (mMCInterface.States.RCSToggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.RCS))
+            if (currentPanel.States.RCSToggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.RCS))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.RCS]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.RCS]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
 
-            if (mMCInterface.States.SASToggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.SAS))
+            if (currentPanel.States.SASToggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.SAS))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.SAS]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.SAS]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
 
-            if (mMCInterface.States.ActionGroup0Toggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Actiongroup0))
+            if (currentPanel.States.ActionGroup0Toggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Actiongroup0))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Actiongroup0]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Actiongroup0]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
 
-            if (mMCInterface.States.ActionGroup1Toggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Actiongroup1))
+            if (currentPanel.States.ActionGroup1Toggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Actiongroup1))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Actiongroup1]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Actiongroup1]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
 
-            if (mMCInterface.States.ActionGroup2Toggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Actiongroup2))
+            if (currentPanel.States.ActionGroup2Toggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Actiongroup2))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Actiongroup2]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Actiongroup2]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
 
-            if (mMCInterface.States.ActionGroup3Toggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Actiongroup3))
+            if (currentPanel.States.ActionGroup3Toggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Actiongroup3))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Actiongroup3]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Actiongroup3]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
 
-            if (mMCInterface.States.ActionGroup4Toggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Actiongroup4))
+            if (currentPanel.States.ActionGroup4Toggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Actiongroup4))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Actiongroup4]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Actiongroup4]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
 
-            if (mMCInterface.States.ActionGroup5Toggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Actiongroup5))
+            if (currentPanel.States.ActionGroup5Toggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Actiongroup5))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Actiongroup5]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Actiongroup5]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
 
-            if (mMCInterface.States.ActionGroup6Toggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Actiongroup6))
+            if (currentPanel.States.ActionGroup6Toggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Actiongroup6))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Actiongroup6]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Actiongroup6]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
 
-            if (mMCInterface.States.ActionGroup7Toggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Actiongroup7))
+            if (currentPanel.States.ActionGroup7Toggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Actiongroup7))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Actiongroup7]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Actiongroup7]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
 
-            if (mMCInterface.States.ActionGroup8Toggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Actiongroup8))
+            if (currentPanel.States.ActionGroup8Toggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Actiongroup8))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Actiongroup8]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Actiongroup8]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
 
-            if (mMCInterface.States.ActionGroup9Toggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Actiongroup9))
+            if (currentPanel.States.ActionGroup9Toggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Actiongroup9))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Actiongroup9]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Actiongroup9]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
-            if (mMCInterface.States.Func0Toggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Func0))
+            if (currentPanel.States.Func0Toggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Func0))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Func0]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
-            }
-
-            if (mMCInterface.States.Func1Toggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Func1))
-            {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Func1]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Func0]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
 
-            if (mMCInterface.States.Func2Toggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Func2))
+            if (currentPanel.States.Func1Toggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Func1))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Func2]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Func1]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
 
-            if (mMCInterface.States.Func3Toggled && mMCInterface.Action2ColorMapping.ContainsKey(MCActions.Func3))
+            if (currentPanel.States.Func2Toggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Func2))
             {
-                var colorAction = mMCInterface.Color2ColorActionMapping[mMCInterface.Action2ColorMapping[MCActions.Func3]];
-                if (colorAction.ButtonGraphics.ContainsKey(MCButtonAction.Click))
-                    mMCInterface.ButtonsToDraw.Add(colorAction.ButtonGraphics[MCButtonAction.Click]);
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Func2]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
-        }
 
-        private void ResetToggleButtons(ColorAction colorAction)
-        {
-            if (colorAction == null || colorAction.Action != MCActions.Settings)
-                mMCInterface.States.SettingsDown = false;
-            if (colorAction == null || colorAction.Action != MCActions.RCS)
-                mMCInterface.States.RCSDown = false;
-            if (colorAction == null || colorAction.Action != MCActions.SAS)
-                mMCInterface.States.SASDown = false;
-            if (colorAction == null || colorAction.Action != MCActions.Actiongroup0)
-                mMCInterface.States.ActionGroup0Down = false;
-            if (colorAction == null || colorAction.Action != MCActions.Actiongroup1)
-                mMCInterface.States.ActionGroup1Down = false;
-            if (colorAction == null || colorAction.Action != MCActions.Actiongroup2)
-                mMCInterface.States.ActionGroup2Down = false;
-            if (colorAction == null || colorAction.Action != MCActions.Actiongroup3)
-                mMCInterface.States.ActionGroup3Down = false;
-            if (colorAction == null || colorAction.Action != MCActions.Actiongroup4)
-                mMCInterface.States.ActionGroup4Down = false;
-            if (colorAction == null || colorAction.Action != MCActions.Actiongroup5)
-                mMCInterface.States.ActionGroup5Down = false;
-            if (colorAction == null || colorAction.Action != MCActions.Actiongroup6)
-                mMCInterface.States.ActionGroup6Down = false;
-            if (colorAction == null || colorAction.Action != MCActions.Actiongroup7)
-                mMCInterface.States.ActionGroup7Down = false;
-            if (colorAction == null || colorAction.Action != MCActions.Actiongroup8)
-                mMCInterface.States.ActionGroup8Down = false;
-            if (colorAction == null || colorAction.Action != MCActions.Actiongroup9)
-                mMCInterface.States.ActionGroup9Down = false;
-            if (colorAction == null || colorAction.Action != MCActions.Func0)
-                mMCInterface.States.Func0Down = false;
-            if (colorAction == null || colorAction.Action != MCActions.Func1)
-                mMCInterface.States.Func0Down = false;
-            if (colorAction == null || colorAction.Action != MCActions.Func2)
-                mMCInterface.States.Func0Down = false;
-            if (colorAction == null || colorAction.Action != MCActions.Func3)
-                mMCInterface.States.Func0Down = false;
-            if (colorAction == null || colorAction.Action != MCActions.OpenClose)
+            if (currentPanel.States.Func3Toggled && currentPanel.Action2ColorMapping.ContainsKey(Actions.Func3))
             {
-                if (colorAction == null || colorAction.Name != mMCInterface.Name)
-                    mMCInterface.States.OpenCloseDown = false;
-
-                foreach (GUIInterface subInterface in mMCInterface.Subinterfaces.Values)
-                {
-                    if (colorAction == null || colorAction.Name == subInterface.Name)
-                        subInterface.States.OpenCloseDown = false;
-                }
+                var colorAction = currentPanel.Color2ColorActionMapping[currentPanel.Action2ColorMapping[Actions.Func3]];
+                if (colorAction.ButtonGraphics.ContainsKey(ButtonActions.Click))
+                    currentPanel.ButtonsToDraw.Add(colorAction.ButtonGraphics[ButtonActions.Click]);
             }
         }
         
         private void UpdateThrottle()
         {
             // adjust throttle to input.
-            if (mMCInterface.States.ThrottleMax == MCDirections.Up)
+            if (currentPanel.States.ThrottleMax == Directions.Up)
                 FlightInputHandler.state.mainThrottle = 1f;
 
-            else if (mMCInterface.States.Throttle == MCDirections.Up)
+            else if (currentPanel.States.Throttle == Directions.Up)
                 FlightInputHandler.state.mainThrottle += 0.01f;
 
-            else if (mMCInterface.States.Throttle == MCDirections.Down)
+            else if (currentPanel.States.Throttle == Directions.Down)
                 FlightInputHandler.state.mainThrottle -= 0.01f;
 
-            else if (mMCInterface.States.ThrottleOff)
+            else if (currentPanel.States.ThrottleOff)
                 FlightInputHandler.state.mainThrottle = 0f;
         }
 
         private void UpdateYawPitchRoll(FlightCtrlState flightCtrlState)
         {
             // adjust controls to yaw/pitch/roll input
-            if (mMCInterface.States.Pitch == MCDirections.Up)
+            if (currentPanel.States.Pitch == Directions.Up)
                 flightCtrlState.pitch = 1f;
-            else if (mMCInterface.States.Pitch == MCDirections.Down)
+            else if (currentPanel.States.Pitch == Directions.Down)
                 flightCtrlState.pitch = -1f;
 
-            if (mMCInterface.States.Yaw == MCDirections.Right)
+            if (currentPanel.States.Yaw == Directions.Right)
                 flightCtrlState.yaw = 1f;
-            else if (mMCInterface.States.Yaw == MCDirections.Left)
+            else if (currentPanel.States.Yaw == Directions.Left)
                 flightCtrlState.yaw = -1f;
 
-            if (mMCInterface.States.Roll == MCDirections.Right)
+            if (currentPanel.States.Roll == Directions.Right)
                 flightCtrlState.roll = 1f;
-            else if (mMCInterface.States.Roll == MCDirections.Left)
+            else if (currentPanel.States.Roll == Directions.Left)
                 flightCtrlState.roll = -1f;
         }
 
         private void UpdateRCS(FlightCtrlState flightCtrlState)
         {
             // adjust controls to RCS input
-            if (mMCInterface.States.RCSPitch == MCDirections.Up)
+            if (currentPanel.States.RCSPitch == Directions.Up)
                 flightCtrlState.Y = -1f;
-            if (mMCInterface.States.RCSPitch == MCDirections.Down)
+            if (currentPanel.States.RCSPitch == Directions.Down)
                 flightCtrlState.Y = 1f;
 
-            if (mMCInterface.States.RCSYaw == MCDirections.Right)
+            if (currentPanel.States.RCSYaw == Directions.Right)
                 flightCtrlState.X = -1f;
-            if (mMCInterface.States.RCSYaw == MCDirections.Left)
+            if (currentPanel.States.RCSYaw == Directions.Left)
                 flightCtrlState.X = 1f;
 
-            if (mMCInterface.States.RCSRoll == MCDirections.Right)
+            if (currentPanel.States.RCSRoll == Directions.Right)
                 flightCtrlState.Z = -1f;
-            if (mMCInterface.States.RCSRoll == MCDirections.Left)
+            if (currentPanel.States.RCSRoll == Directions.Left)
                 flightCtrlState.Z = 1f;
         }
-        
 
-        private Dictionary<string, Texture2D> mTextures = new Dictionary<string, Texture2D>();
-        private Texture2D LoadTexture(string path)
+        private void ResetToggleButtons(ColorAction colorAction)
         {
-            if (mTextures.ContainsKey(path))
-                return mTextures[path];
-            
-            WWW www = new WWW("file://" + path);
-            mTextures.Add(path, www.texture);
-
-            return www.texture;
-        }
-
-
-        #region LoadSettings
-
-        public void LoadSettings(string path)
-        {
-            XmlDocument doc = new XmlDocument();
-            try
+            if (colorAction == null || colorAction.Action != Actions.Settings)
+                currentPanel.States.SettingsDown = false;
+            if (colorAction == null || colorAction.Action != Actions.RCS)
+                currentPanel.States.RCSDown = false;
+            if (colorAction == null || colorAction.Action != Actions.SAS)
+                currentPanel.States.SASDown = false;
+            if (colorAction == null || colorAction.Action != Actions.Actiongroup0)
+                currentPanel.States.ActionGroup0Down = false;
+            if (colorAction == null || colorAction.Action != Actions.Actiongroup1)
+                currentPanel.States.ActionGroup1Down = false;
+            if (colorAction == null || colorAction.Action != Actions.Actiongroup2)
+                currentPanel.States.ActionGroup2Down = false;
+            if (colorAction == null || colorAction.Action != Actions.Actiongroup3)
+                currentPanel.States.ActionGroup3Down = false;
+            if (colorAction == null || colorAction.Action != Actions.Actiongroup4)
+                currentPanel.States.ActionGroup4Down = false;
+            if (colorAction == null || colorAction.Action != Actions.Actiongroup5)
+                currentPanel.States.ActionGroup5Down = false;
+            if (colorAction == null || colorAction.Action != Actions.Actiongroup6)
+                currentPanel.States.ActionGroup6Down = false;
+            if (colorAction == null || colorAction.Action != Actions.Actiongroup7)
+                currentPanel.States.ActionGroup7Down = false;
+            if (colorAction == null || colorAction.Action != Actions.Actiongroup8)
+                currentPanel.States.ActionGroup8Down = false;
+            if (colorAction == null || colorAction.Action != Actions.Actiongroup9)
+                currentPanel.States.ActionGroup9Down = false;
+            if (colorAction == null || colorAction.Action != Actions.Func0)
+                currentPanel.States.Func0Down = false;
+            if (colorAction == null || colorAction.Action != Actions.Func1)
+                currentPanel.States.Func0Down = false;
+            if (colorAction == null || colorAction.Action != Actions.Func2)
+                currentPanel.States.Func0Down = false;
+            if (colorAction == null || colorAction.Action != Actions.Func3)
+                currentPanel.States.Func0Down = false;
+            if (colorAction == null || colorAction.Action != Actions.OpenClose)
             {
-                doc.Load(path.Replace("/", "\\"));
-                var i = doc.GetElementsByTagName(Consts.cInterface);
-                foreach (XmlNode node in i)
+                if (colorAction == null || colorAction.Name != currentPanel.Name)
+                    currentPanel.States.OpenCloseDown = false;
+
+                foreach (GuiPanel subInterface in currentPanel.Subpanels.Values)
                 {
-                    GUIInterface mcInterface = null;
-
-                    if (node.Name == Consts.cInterface)
-                    {
-                        // read interface
-                        try
-                        {
-                            mcInterface = GetInterface(node);
-                            if (mcInterface == null)
-                                continue;
-
-                            // read sub interfaces
-                            foreach (XmlNode child in node.ChildNodes)
-                            {
-                                if (child.Name == Consts.cSubInterface)
-                                {
-                                    GUIInterface newSubinterface = GetInterface(child);
-                                    if (!newSubinterface.IsEmpty)
-                                    {
-                                        newSubinterface.Parent = mcInterface;
-                                        mcInterface.Subinterfaces.Add(newSubinterface.Name, newSubinterface);
-                                    }
-                                }
-                                else if (child.Name == Consts.cColorActionMapping)
-                                {
-                                    // read color action mapping
-                                    foreach (XmlNode colorActionNode in child.ChildNodes)
-                                    {
-                                        if (colorActionNode.Name == Consts.cColorAction)
-                                        {
-                                            ColorAction colorAction = GetColorAction(colorActionNode);
-                                            try
-                                            {
-                                                if (!colorAction.IsEmpty)
-                                                {
-                                                    colorAction.Interface = mcInterface;
-                                                    mcInterface.Color2ColorActionMapping.Add(colorAction.Color.ToString(), colorAction);
-                                                    if (!mcInterface.Action2ColorMapping.ContainsKey(colorAction.Action))
-                                                        mcInterface.Action2ColorMapping.Add(colorAction.Action, colorAction.Color.ToString());
-                                                }
-                                            }
-                                            catch
-                                            {
-                                                print(string.Format("Can't add ColorAction! Color ({0}) already exists.", colorAction.Color));
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            print("ErrorMessage: " + ex.Message);
-                        }
-                    }
-
-                    mInterfaces.Add(mcInterface.Name, mcInterface);
-                }
-
-                if (mInterfaces.ContainsKey("Default"))
-                    mMCInterface = mInterfaces["Default"];
-
-                else if (mInterfaces.Count > 0)
-                {
-                    foreach (var entry in mInterfaces)
-                    {
-                        mMCInterface = entry.Value;
-                        break;
-                    }
+                    if (colorAction == null || colorAction.Name == subInterface.Name)
+                        subInterface.States.OpenCloseDown = false;
                 }
             }
-            catch (Exception ex)
-            {
-                print("ErrorMessage: " + ex.Message);
-            }
         }
-
-        private GUIInterface GetInterface(XmlNode node)
-        {
-            GUIInterface newInterface = new GUIInterface();
-
-            string posX = string.Empty;
-            string posY = string.Empty;
-            //MCSize size = new MCSize();
-
-            foreach (XmlAttribute att in node.Attributes)
-            {
-                if (att.Name == Consts.cName)
-                    newInterface.Name = att.Value.ToString();
-
-                else if (att.Name == Consts.cAlignment)
-                    newInterface.Alignment = GetAlignment(att.Value.ToString().Trim());
-
-                else if (att.Name == Consts.cMargin)
-                    newInterface.Margin = GetMargin(att.Value.ToString().Trim());
-
-                else if (att.Name == Consts.cX)
-                    posX = att.Value;
-
-                else if (att.Name == Consts.cY)
-                    posY = att.Value;
-
-                else if (att.Name == Consts.cOpenCloseButtonHeight)
-                    newInterface.OpenCloseBtnHeight = ParseInt(att.Value);
-
-                //else if (att.Name == Consts.cWidth)
-                //    size.Width = ParseInt(att.Value);
-
-                //else if (att.Name == Consts.cHeight)
-                //    size.Height = ParseInt(att.Value);
-
-                else if (att.Name == Consts.cPicPath)
-                    newInterface.PicPath = mPluginFolder + "/" + att.Value.ToString();
-
-                else if (att.Name == Consts.cHotSpotPicPath)
-                    newInterface.HotSpotPicPath = mPluginFolder + "/" + att.Value.ToString();
-            }
-
-            if (posX.Contains("%"))
-                newInterface.RelativeX = true;
-            if (posY.Contains("%"))
-                newInterface.RelativeY = true;
-
-            Vector2 pos = new Vector2();
-            if (!string.IsNullOrEmpty(posX))
-                pos.x = ParseInt(posX);
-            if (!string.IsNullOrEmpty(posY))
-                pos.y = ParseInt(posY);
-
-            newInterface.Position = pos;
-            //newInterface.Size = size;
-
-            return newInterface;
-        }
-
-        private ColorAction GetColorAction(XmlNode colorActionNode)
-        {
-            ColorAction colorAction = new ColorAction();
-            foreach (XmlAttribute att in colorActionNode.Attributes)
-            {
-                if (att.Name == Consts.cName)
-                    colorAction.Name = att.Value.ToString();
-
-                else if (att.Name == Consts.cColor)
-                    colorAction.Color = GetColor(att.Value.ToString().Trim());
-
-                else if (att.Name == Consts.cAction)
-                    colorAction.Action = GetAction(att.Value.ToString().Trim());
-            }
-
-            foreach (XmlNode buttonNode in colorActionNode.ChildNodes)
-            {
-                if (buttonNode.Name == Consts.cButtonGraphic)
-                {
-                    var button = GetButtonGraphic(buttonNode);
-                    if (!button.IsEmpty)
-                    {
-                        button.ColorAction = colorAction;
-                        colorAction.ButtonGraphics.Add(button.Action, button);
-                    }
-                }
-            }
-
-            return colorAction;
-        }
-
-        private ButtonGraphic GetButtonGraphic(XmlNode buttonNode)
-        {
-            ButtonGraphic button = new ButtonGraphic();
-            foreach (XmlAttribute att in buttonNode.Attributes)
-            {
-                if (att.Name == Consts.cAction)
-                    button.Action = GetButtonAction(att.Value.ToString().Trim());
-
-                else if (att.Name == Consts.cPicPath)
-                    button.PicPath = mPluginFolder + "/" + att.Value.ToString();
-
-                else if (att.Name == Consts.cX)
-                    button.X = ParseInt(att.Value.ToString().Trim());
-
-                else if (att.Name == Consts.cY)
-                    button.Y = ParseInt(att.Value.ToString().Trim());
-
-                //else if (att.Name == Consts.cWidth)
-                //    button.Width = ParseInt(att.Value.ToString().Trim());
-
-                //else if (att.Name == Consts.cHeight)
-                //    button.Height = ParseInt(att.Value.ToString().Trim());
-
-                else if (att.Name == Consts.cTextureX)
-                    button.TextureX = ParseInt(att.Value.ToString().Trim());
-
-                else if (att.Name == Consts.cTextureY)
-                    button.TextureY = ParseInt(att.Value.ToString().Trim());
-
-                else if (att.Name == Consts.cTextureWidth)
-                    button.TextureWidth = ParseInt(att.Value.ToString().Trim());
-
-                else if (att.Name == Consts.cTextureHeight)
-                    button.TextureHeight = ParseInt(att.Value.ToString().Trim());
-            }
-
-            return button;
-        }
-
-        private Margin GetMargin(string marginAsString)
-        {
-            int l = 0;
-            int r = 0;
-            int t = 0;
-            int b = 0;
-
-            string[] temp = marginAsString.Split(',');
-
-            if (temp == null || temp.Length != 4)
-            {
-                //print("KSPMouseInterface Error: Can't parse Margin");
-            }
-            else
-            {
-                try
-                {
-                    l = int.Parse(temp[0].Trim());
-                    r = int.Parse(temp[1].Trim());
-                    t = int.Parse(temp[2].Trim());
-                    b = int.Parse(temp[3].Trim());
-                }
-                catch
-                {
-                    //print("KSPMouseInterface Error: Can't parse Margin");
-                }
-            }
-
-            return new Margin(l, r, t, b);
-        }
-
-        private MCAlignment GetAlignment(string alignmentAsString)
-        {
-            MCAlignment alignment = MCAlignment.Bottom;
-
-            switch (alignmentAsString)
-            {
-                case Consts.cLeft:
-                    alignment = MCAlignment.Left;
-                    break;
-                case Consts.cRight:
-                    alignment = MCAlignment.Right;
-                    break;
-                case Consts.cTop:
-                    alignment = MCAlignment.Top;
-                    break;
-                case Consts.cBottom:
-                    alignment = MCAlignment.Bottom;
-                    break;
-            }
-
-            return alignment;
-        }
-
-        private Color GetColor(string colorAsString)
-        {
-            int r = 0;
-            int g = 0;
-            int b = 0;
-
-            string[] temp = colorAsString.Split(',');
-
-            if (temp == null || temp.Length != 3)
-            {
-                //print("KSPMouseInterface Error: Can't parse Color");
-            }
-            else
-            {
-                try
-                {
-                    r = int.Parse(temp[0].Trim());
-                    g = int.Parse(temp[1].Trim());
-                    b = int.Parse(temp[2].Trim());
-                }
-                catch
-                {
-                    //print("KSPMouseInterface Error: Can't parse Color");
-                }
-            }
-
-            return new Color(r, g, b, 255);
-        }
-
-        private MCActions GetAction(string actionAsString)
-        {
-            MCActions action = MCActions.None;
-
-            switch (actionAsString)
-            {
-                case Consts.cSettings:
-                    action = MCActions.Settings;
-                    break;
-                case Consts.cOpenClose:
-                    action = MCActions.OpenClose;
-                    break;
-                case Consts.cNextVessel:
-                    action = MCActions.NextVessel;
-                    break;
-                case Consts.cPrevVessel:
-                    action = MCActions.PrevVessel;
-                    break;
-                case Consts.cThrottleMax:
-                    action = MCActions.ThrottleMax;
-                    break;
-                case Consts.cThrottleUp:
-                    action = MCActions.ThrottleUp;
-                    break;
-                case Consts.cThrottleDown:
-                    action = MCActions.ThrottleDown;
-                    break;
-                case Consts.cThrottleOff:
-                    action = MCActions.ThrottleOff;
-                    break;
-                case Consts.cRCS:
-                    action = MCActions.RCS;
-                    break;
-                case Consts.cSAS:
-                    action = MCActions.SAS;
-                    break;
-                case Consts.cPitchUp:
-                    action = MCActions.PitchUp;
-                    break;
-                case Consts.cPitchDown:
-                    action = MCActions.PitchDown;
-                    break;
-                case Consts.cYawRight:
-                    action = MCActions.YawRight;
-                    break;
-                case Consts.cYawLeft:
-                    action = MCActions.YawLeft;
-                    break;
-                case Consts.cRollRight:
-                    action = MCActions.RollRight;
-                    break;
-                case Consts.cRollLeft:
-                    action = MCActions.RollLeft;
-                    break;
-                case Consts.cNextStage:
-                    action = MCActions.NextStage;
-                    break;
-                case Consts.cActiongroup0:
-                    action = MCActions.Actiongroup0;
-                    break;
-                case Consts.cActiongroup1:
-                    action = MCActions.Actiongroup1;
-                    break;
-                case Consts.cActiongroup2:
-                    action = MCActions.Actiongroup2;
-                    break;
-                case Consts.cActiongroup3:
-                    action = MCActions.Actiongroup3;
-                    break;
-                case Consts.cActiongroup4:
-                    action = MCActions.Actiongroup4;
-                    break;
-                case Consts.cActiongroup5:
-                    action = MCActions.Actiongroup5;
-                    break;
-                case Consts.cActiongroup6:
-                    action = MCActions.Actiongroup6;
-                    break;
-                case Consts.cActiongroup7:
-                    action = MCActions.Actiongroup7;
-                    break;
-                case Consts.cActiongroup8:
-                    action = MCActions.Actiongroup8;
-                    break;
-                case Consts.cActiongroup9:
-                    action = MCActions.Actiongroup9;
-                    break;
-                case Consts.cAnalogCenter:
-                    action = MCActions.AnalogCenter;
-                    break;
-                case Consts.cAnalogUp:
-                    action = MCActions.AnalogUp;
-                    break;
-                case Consts.cAnalogDown:
-                    action = MCActions.AnalogDown;
-                    break;
-                case Consts.cAnalogLeft:
-                    action = MCActions.AnalogLeft;
-                    break;
-                case Consts.cAnalogRight:
-                    action = MCActions.AnalogRight;
-                    break;
-                case Consts.cAnalogUpLeft:
-                    action = MCActions.AnalogUpLeft;
-                    break;
-                case Consts.cAnalogUpRight:
-                    action = MCActions.AnalogUpRight;
-                    break;
-                case Consts.cAnalogDownLeft:
-                    action = MCActions.AnalogDownLeft;
-                    break;
-                case Consts.cAnalogDownRight:
-                    action = MCActions.AnalogDownRight;
-                    break;
-                case Consts.cRCSPitchUp:
-                    action = MCActions.RCSPitchUp;
-                    break;
-                case Consts.cRCSPitchDown:
-                    action = MCActions.RCSPitchDown;
-                    break;
-                case Consts.cRCSYawRight:
-                    action = MCActions.RCSYawRight;
-                    break;
-                case Consts.cRCSYawLeft:
-                    action = MCActions.RCSYawLeft;
-                    break;
-                case Consts.cRCSRollRight:
-                    action = MCActions.RCSRollRight;
-                    break;
-                case Consts.cRCSRollLeft:
-                    action = MCActions.RCSRollLeft;
-                    break;
-                case Consts.cRCSAnalogCenter:
-                    action = MCActions.RCSAnalogCenter;
-                    break;
-                case Consts.cRCSAnalogUp:
-                    action = MCActions.RCSAnalogUp;
-                    break;
-                case Consts.cRCSAnalogDown:
-                    action = MCActions.RCSAnalogDown;
-                    break;
-                case Consts.cRCSAnalogLeft:
-                    action = MCActions.RCSAnalogLeft;
-                    break;
-                case Consts.cRCSAnalogRight:
-                    action = MCActions.RCSAnalogRight;
-                    break;
-                case Consts.cRCSAnalogUpLeft:
-                    action = MCActions.RCSAnalogUpLeft;
-                    break;
-                case Consts.cRCSAnalogUpRight:
-                    action = MCActions.RCSAnalogUpRight;
-                    break;
-                case Consts.cRCSAnalogDownLeft:
-                    action = MCActions.RCSAnalogDownLeft;
-                    break;
-                case Consts.cRCSAnalogDownRight:
-                    action = MCActions.RCSAnalogDownRight;
-                    break;
-                default:
-                    action = MCActions.None;
-                    break;
-            }
-
-            return action;
-        }
-
-        private MCButtonAction GetButtonAction(string buttonActionAsString)
-        {
-            MCButtonAction action = MCButtonAction.None;
-
-            switch (buttonActionAsString)
-            {
-                case Consts.cClick:
-                    action = MCButtonAction.Click;
-                    break;
-                case Consts.cHover:
-                    action = MCButtonAction.Hover;
-                    break;
-            }
-
-            return action;
-        }
-
-        private int ParseInt(string integer)
-        {
-            int pos = 0;
-            try
-            {
-                if (integer.Contains("%"))
-                    pos = int.Parse(integer.Replace("%", "").Trim());
-                else
-                    pos = int.Parse(integer);
-            }
-            catch
-            {
-                //print("KSPMouseInterface error: Error during int parsing!");
-            }
-
-            return pos;
-        }
-
-        #endregion
 
         #endregion
     }
