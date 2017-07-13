@@ -4,6 +4,33 @@ namespace KSPMouseInterface
 {
     public static class Parse
     {
+        public static Vector2 Position2dFrom(string posAsString)
+        {
+            int x = 0;
+            int y = 0;
+
+            string[] temp = posAsString.Split(',');
+
+            if (temp == null || temp.Length != 2)
+            {
+                //print("KSPMouseInterface Error: Can't parse Margin");
+            }
+            else
+            {
+                try
+                {
+                    x = int.Parse(temp[0].Trim());
+                    y = int.Parse(temp[1].Trim());
+                }
+                catch
+                {
+                    //print("KSPMouseInterface Error: Can't parse Margin");
+                }
+            }
+
+            return new Vector2(x, y);
+        }
+
         public static Margin MarginFrom(string marginAsString)
         {
             int l = 0;
@@ -284,6 +311,21 @@ namespace KSPMouseInterface
             catch
             {
                 //print("KSPMouseInterface error: Error during int parsing!");
+            }
+
+            return pos;
+        }
+
+        public static float FloatFrom(string floatAsString)
+        {
+            float pos = 0f;
+            try
+            { 
+                pos = float.Parse(floatAsString);
+            }
+            catch
+            {
+                //print("KSPMouseInterface error: Error during float parsing!");
             }
 
             return pos;

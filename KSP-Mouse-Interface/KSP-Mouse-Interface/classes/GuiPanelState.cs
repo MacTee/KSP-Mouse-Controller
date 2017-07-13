@@ -510,6 +510,7 @@ namespace KSPMouseInterface
         public Vector2 TexCoords { get; set; }
 
         public bool AnalogInput { get; set; }
+        public Vector2 AnalogInputValue { get; set; }
         public bool RCSAnalogInput { get; set; }
         public bool HasInput
         {

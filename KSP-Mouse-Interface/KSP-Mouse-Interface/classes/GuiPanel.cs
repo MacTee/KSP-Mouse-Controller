@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Xml;
 using UnityEngine;
 
@@ -164,6 +165,17 @@ namespace KSPMouseInterface
 
         public List<ButtonGraphic> ButtonsToDraw { get; set; }
 
+        public ColorAction CurrentColorAction
+        {
+            get
+            {
+                if (Color2ColorActionMapping.ContainsKey(HotSpotColor.ToString()))
+                    return Color2ColorActionMapping[HotSpotColor.ToString()];
+
+                return null;
+            }
+        }
+
         #endregion
 
 
@@ -280,20 +292,34 @@ namespace KSPMouseInterface
         
         public void UpdateTexCoords(Vector2 mousePosition)
         {
-            int x = (int)mousePosition.x - (int)PanelRect.x;
-            int y = Size.Height - ((int)mousePosition.y - (int)PanelRect.y);
-            States.TexCoords = new Vector2(x, y);
+            States.TexCoords = ConvertToTextCoords(mousePosition);
 
+            Color color = GetHotSpotColor(States.TexCoords);
+            States.Color = color;
+
+            foreach (var entry in Subpanels)
+                entry.Value.UpdateTexCoords(mousePosition);
+        }
+
+        private Color GetHotSpotColor(Vector2 texCoords)
+        {
             Color color = new Color(0, 0, 0, 0);
             if (HasValidTexCoords && (ParentPanel || (!ParentPanel && !Collapsed)))
             {
-                color = TextureHotSpots.GetPixel((int)States.TexCoords.x,
-                                                              (int)States.TexCoords.y);
+                color = TextureHotSpots.GetPixel((int)texCoords.x, (int)texCoords.y);
                 color = new Color(color.r * 255, color.g * 255, color.b * 255, color.a * 255);
             }
-            States.Color = color;
+
+            return color;
         }
 
+        private Vector2 ConvertToTextCoords(Vector2 position)
+        {
+            var x = (int)position.x - (int)PanelRect.x;
+            var y = Size.Height - ((int)position.y - (int)PanelRect.y);
+
+            return new Vector2(x, y);
+        }
 
         public static Dictionary<string, GuiPanel> CreateFromXml(string path)
         {
@@ -415,6 +441,20 @@ namespace KSPMouseInterface
                     }
                 }
             }
+        }
+
+        public ColorAction GetColorActionByAction(Actions action)
+        {
+            if (Action2ColorMapping.ContainsKey(action))
+            {
+                var colorKey = Action2ColorMapping[action];
+                if (Color2ColorActionMapping.ContainsKey(colorKey))
+                {
+                    return Color2ColorActionMapping[colorKey];
+                }
+            }
+
+            return null;
         }
     }
 }

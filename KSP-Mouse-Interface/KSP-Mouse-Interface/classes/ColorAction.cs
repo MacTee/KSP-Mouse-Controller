@@ -21,6 +21,10 @@ namespace KSPMouseInterface
         // The color of the Button on the hot spot graphic.
         public Color Color { get; set; }
 
+        public Vector2 Center { get; set; }
+
+        public float Radius { get; set; }
+
         // List of button states
         public Dictionary<ButtonActions, ButtonGraphic> ButtonGraphics { get; set; }
 
@@ -59,6 +63,12 @@ namespace KSPMouseInterface
 
                 else if (att.Name == Consts.cAction)
                     colorAction.Action = Parse.ActionFrom(att.Value.ToString().Trim());
+
+                else if (att.Name == Consts.cCenter)
+                    colorAction.Center = Parse.Position2dFrom(att.Value.ToString().Trim());
+
+                else if (att.Name == Consts.cRadius)
+                    colorAction.Radius = Parse.FloatFrom(att.Value.ToString().Trim());
             }
 
             foreach (XmlNode buttonNode in node.ChildNodes)

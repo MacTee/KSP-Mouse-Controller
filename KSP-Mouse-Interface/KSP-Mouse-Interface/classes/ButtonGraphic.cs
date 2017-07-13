@@ -193,7 +193,7 @@ namespace KSPMouseInterface
 
 
         // Calculates the on screen rect and the texture area rect.
-        private void CalcPosition()
+        public void CalcPosition()
         {
             if (HasTextureCoords)
             {

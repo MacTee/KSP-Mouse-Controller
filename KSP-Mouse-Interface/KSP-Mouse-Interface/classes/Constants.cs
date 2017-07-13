@@ -30,6 +30,8 @@
         public const string cColor = "Color";
         public const string cAction = "Action";
         public const string cOpenCloseButtonHeight = "OpenCloseButtonHeight";
+        public const string cCenter = "Center";
+        public const string cRadius = "Radius";
 
         // MC Alignments
         public const string cLeft = "Left";
