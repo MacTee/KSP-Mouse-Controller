@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml;
+using System.Linq;
 using UnityEngine;
 
 namespace KSPMouseInterface
@@ -171,6 +172,15 @@ namespace KSPMouseInterface
             {
                 if (Color2ColorActionMapping.ContainsKey(HotSpotColor.ToString()))
                     return Color2ColorActionMapping[HotSpotColor.ToString()];
+
+                else
+                {
+                    foreach (var subpanel in Subpanels)
+                    {
+                        if (subpanel.Value.Color2ColorActionMapping.ContainsKey(HotSpotColor.ToString()))
+                            return subpanel.Value.Color2ColorActionMapping[HotSpotColor.ToString()];
+                    }
+                }
 
                 return null;
             }

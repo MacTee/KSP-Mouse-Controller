@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Xml;
+using System.Linq;
 using UnityEngine;
 using KSP.UI.Screens;
 
@@ -10,6 +10,8 @@ namespace KSPMouseInterface
     public class KSPMouseInterface : MonoBehaviour
     {
         #region Member
+
+        float maxAnalogValueLength = 1.5f;
 
         // paths
         static string rootPath = KSPUtil.ApplicationRootPath.Replace("\\", "/");
@@ -39,21 +41,20 @@ namespace KSPMouseInterface
 
             if (mainPanel != null)
             {
-                // Load textures 
                 textures.Clear();
+
+                // Load textures 
                 mainPanel.Texture = LoadTexture(pluginFolderPath + "/" + mainPanel.TexturePath);
                 mainPanel.TextureHotSpots = LoadTexture(pluginFolderPath + "/" + mainPanel.HotSpotTexturePath);
 
-                foreach (var entry in mainPanel.Subpanels)
-                {
-                    entry.Value.Texture = LoadTexture(pluginFolderPath + "/" + entry.Value.TexturePath);
-                    entry.Value.TextureHotSpots = LoadTexture(pluginFolderPath + "/" + entry.Value.HotSpotTexturePath);
-                }
+                LoadButtonTextures(mainPanel);
 
-                foreach (var entry in mainPanel.Color2ColorActionMapping)
+                foreach (var subpanel in mainPanel.Subpanels.Values)
                 {
-                    foreach (var button in entry.Value.ButtonGraphics)
-                        button.Value.Texture = LoadTexture(pluginFolderPath + "/" + button.Value.TexturePath);
+                    subpanel.Texture = LoadTexture(pluginFolderPath + "/" + subpanel.TexturePath);
+                    subpanel.TextureHotSpots = LoadTexture(pluginFolderPath + "/" + subpanel.HotSpotTexturePath);
+
+                    LoadButtonTextures(subpanel);
                 }
 
                 // Calculate interface positions
@@ -75,27 +76,19 @@ namespace KSPMouseInterface
 
             if (mainPanel != null)
             {
-                // draw interface
+                // draw subinterfaces
                 foreach (var entry in mainPanel.Subpanels)
                     if (entry.Value.Texture != null && !mainPanel.Collapsed)
-                        GUI.DrawTexture(entry.Value.PanelRect, entry.Value.Texture);
-
-                if (mainPanel.Texture != null)
-                    GUI.DrawTexture(mainPanel.PanelRect, mainPanel.Texture);
-
-                foreach (ButtonGraphic button in mainPanel.ButtonsToDraw)
-                {
-                    Rect pos = button.Position;
-                    pos.x += button.ColorAction.Interface.PanelRect.x;
-                    pos.y += button.ColorAction.Interface.PanelRect.y;
-
-                    if (button.HasTextureCoords)
                     {
-                        print(pos.ToString() + button.TexturePosition.ToString());
-                        GUI.DrawTextureWithTexCoords(pos, button.Texture, button.TexturePosition);
+                        GUI.DrawTexture(entry.Value.PanelRect, entry.Value.Texture);
+                        DrawButtons(entry.Value.ButtonsToDraw);
                     }
-                    else
-                        GUI.DrawTexture(pos, button.Texture);
+
+                // draw main interfaces
+                if (mainPanel.Texture != null)
+                {
+                    GUI.DrawTexture(mainPanel.PanelRect, mainPanel.Texture);
+                    DrawButtons(mainPanel.ButtonsToDraw);
                 }
 
                 // draw settings/debug window
@@ -121,13 +114,10 @@ namespace KSPMouseInterface
                     mainPanel = guiPanels["Default"];
 
                 else if (guiPanels.Count > 0)
-                {
-                    foreach (var entry in guiPanels)
-                    {
-                        mainPanel = entry.Value;
-                        break;
-                    }
-                }
+                    mainPanel = guiPanels.Values.First();
+
+                else
+                    print("Error (KSPMouseInterface): No Interface found!");
             }
             catch (Exception ex)
             {
@@ -146,6 +136,15 @@ namespace KSPMouseInterface
             return www.texture;
         }
 
+        private void LoadButtonTextures(GuiPanel panel)
+        {
+            foreach (var entry in panel.Color2ColorActionMapping.Values)
+            {
+                foreach (var button in entry.ButtonGraphics.Values)
+                    button.Texture = LoadTexture(pluginFolderPath + "/" + button.TexturePath);
+            }
+        }
+
         private void DrawWindow(int winID)
         {
             switch (winID)
@@ -159,12 +158,7 @@ namespace KSPMouseInterface
                     GUILayout.Label("InterfaceStates:");
                     GUILayout.Label("Position = " + mainPanel.PanelRect.position.ToString());
                     GUILayout.Label("HasInput = " + mainPanel.States.HasInput.ToString());
-                    GUILayout.Label("HasAnalogInput = " + mainPanel.States.AnalogInput.ToString()); 
-                    GUILayout.Label("mousePosRel2PanelTopLeft = " + debug1); 
-                    GUILayout.Label("mousePosRel2Center = " + debug2); 
-                    GUILayout.Label("maxPosRel2Center = " + debug3); 
-                    GUILayout.Label("maxPosRel2PanelTopLeft = " + debug4);
-                    GUILayout.Label("newPos = " + debug5);
+                    GUILayout.Label("HasAnalogInput = " + mainPanel.States.AnalogInput.ToString());
                     GUILayout.Label("AnalogInputValue = " + mainPanel.States.AnalogInputValue.ToString()); 
                     GUILayout.Label("ActiveColorAction = " + (activeColorAction != null ? activeColorAction.Action.ToString() : "")); 
                     GUILayout.Label("HoverColorAction = " + (mainPanel.CurrentColorAction != null ? mainPanel.CurrentColorAction.Action.ToString() : "")); 
@@ -184,6 +178,7 @@ namespace KSPMouseInterface
                         GUILayout.Label("Position = " + entry.Value.PanelRect.position.ToString());
                         GUILayout.Label("Texture Pos = " + entry.Value.States.TexCoords.ToString());
                         GUILayout.Label("Color = " + entry.Value.States.Color.ToString());
+                        GUILayout.Label("HasInput = " + entry.Value.States.HasInput.ToString());
                     }
 
                     //GUILayout.Label("Func0 = " + mMCInterface.CurrentInterfaceStates.Func0Down.ToString());
@@ -209,6 +204,32 @@ namespace KSPMouseInterface
             }
         }
 
+        private void DrawButtons(List<ButtonGraphic> buttons)
+        {
+            foreach (ButtonGraphic button in buttons)
+            {
+                Rect pos = button.Position;
+                pos.x += button.ColorAction.Interface.PanelRect.x;
+                pos.y += button.ColorAction.Interface.PanelRect.y;
+
+                if (button.Texture == null)
+                {
+                    //print("ColorAction:" + button.ColorAction.Action.ToString() + "; ButtonAction: " + button.Action.ToString() + "; Pos: " + pos.ToString() + " Texture: NULL");
+                    return;
+                }
+                else if (button.HasTextureCoords)
+                {
+                    //print("ColorAction:" + button.ColorAction.Action.ToString() + "; ButtonAction: " + button.Action.ToString() + "; Pos: " + pos.ToString() + "; TexturePos: " + button.TexturePosition.ToString());
+                    GUI.DrawTextureWithTexCoords(pos, button.Texture, button.TexturePosition);
+                }
+                else
+                {
+                    //print("ColorAction:" + button.ColorAction.Action.ToString() + "; ButtonAction: " + button.Action.ToString() + "; Pos: " + pos.ToString());
+                    GUI.DrawTexture(pos, button.Texture);
+                }
+            }
+        }
+
         // called every frame
         private void UpdateControl(FlightCtrlState flightCtrlState)
         {
@@ -219,8 +240,8 @@ namespace KSPMouseInterface
                 // expand/collapse interface
                 mainPanel.Collapsed = !mainPanel.States.OpenCloseToggled;
 
-                foreach (var entry in mainPanel.Subpanels)
-                    entry.Value.Collapsed = !entry.Value.States.OpenCloseToggled;
+                foreach (var subpanel in mainPanel.Subpanels.Values)
+                    subpanel.Collapsed = !subpanel.States.OpenCloseToggled;
 
                 // next stage
                 if (mainPanel.States.NextStageToggled && StageManager.StageCount > 0)
@@ -423,6 +444,13 @@ namespace KSPMouseInterface
 
                             mainPanel.States.AnalogInput = true;
                             mainPanel.States.AnalogInputValue = new Vector2(Mathf.Abs(centerToMouse.x) / radius, Mathf.Abs(centerToMouse.y) / radius);
+                            if (mainPanel.States.AnalogInputValue.magnitude > maxAnalogValueLength)
+                            {
+                                var newAnalogInputValue = mainPanel.States.AnalogInputValue;
+                                newAnalogInputValue.Normalize();
+                                newAnalogInputValue *= maxAnalogValueLength;
+                                mainPanel.States.AnalogInputValue = newAnalogInputValue;
+                            }
 
                             if (centerToMouse.x >= 0f && centerToMouse.y >= 0f)
                             {
@@ -692,8 +720,8 @@ namespace KSPMouseInterface
                 var btn = activeColorAction.ButtonGraphics[ButtonActions.Click];
 
                 // for AnalogCenter we use click texture for normal state (no hover, not clicked)
-                // the clicked state of the AnaloCenter uses the hover texture insted.
-                // during dragging of the AnalogCenter the position of the Texture will change,
+                // the clicked state of the AnaloCenter uses the hover texture instead.
+                // during dragging of the AnalogCenter the position of the hover texture will change,
                 // but will be reset during hoverColorAction handling (see line ~717) if needed.
                 if (activeColorAction.Action == Actions.AnalogCenter)
                     btn = CalcAnalogCenterPosition(btn);
@@ -707,7 +735,7 @@ namespace KSPMouseInterface
                 mainPanel.ButtonsToDraw.Add(acColorAction.ButtonGraphics[ButtonActions.Click]);
 
             var hoverColorAction = mainPanel.CurrentColorAction;
-            if (hoverColorAction.ButtonGraphics.ContainsKey(ButtonActions.Hover))
+            if (hoverColorAction != null && hoverColorAction.ButtonGraphics.ContainsKey(ButtonActions.Hover))
             {
                 if (activeColorAction == null || (hoverColorAction.Action == Actions.AnalogCenter && activeColorAction.Action != Actions.AnalogCenter))
                 {

@@ -66,6 +66,28 @@
   <ItemGroup>
     <Content Include="data\Default\actiongroups\ActionGroups_Interface.png" />
     <Content Include="data\Default\actiongroups\ActionGroups_HotSpots.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-01_click.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-01_hover.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-02_click.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-02_hover.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-03_click.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-03_hover.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-04_click.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-04_hover.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-05_click.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-05_hover.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-06_click.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-06_hover.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-07_click.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-07_hover.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-08_click.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-08_hover.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-09_click.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-09_hover.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-10_click.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-ag-10_hover.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-options_click.png" />
+    <Content Include="data\Default\actiongroups\btn\bn-options_hover.png" />
     <Content Include="data\Default\main\btn\bn-actiongroups_click.png" />
     <Content Include="data\Default\main\btn\bn-actiongroups_hover.png" />
     <Content Include="data\Default\main\btn\bn-navarea-down_click.png" />
@@ -129,7 +151,8 @@
     <Content Include="doc\ToDo.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="pics\KSPMouseInterface_GIMP.xcf" />
+    <None Include="pics\ActionGroupsInterface_GIMP.xcf" />
+    <None Include="pics\MainInterface_GIMP.xcf" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

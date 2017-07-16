@@ -2,10 +2,78 @@
 <KSPMouseInterface>
 	<Interfaces>
 		<Interface Name="MainInterface" Alignment="Bottom" Margin="200, 0, 0, 0" X="50%" Y="100%" OpenCloseButtonHeight="12" TexturePath="Data/Default/main/Main_Interface.png" HotSpotTexturePath="Data/Default/main/Main_HotSpots.png">
-			<SubInterface Name="ActionGroups" Alignment="Right" X="224" Y="75" TexturePath="Data/Default/actiongroups/ActionGroups_Interface.png" HotSpotTexturePath="Data/Default/actiongroups/ActionGroups_HotSpots.png"/>
-			<!--<SubInterface Name="RCS-Panel" Alignment="Top" X="50" Y="12" TexturePath="Data/Default/rcs/RCSPanel_Interface.png" HotSpotTexturePath="Data/Default/rcs/RCSPanel_HotSpots.png"/>-->
+			<SubInterface Name="ActionGroups" Alignment="Right" X="224" Y="75" TexturePath="Data/Default/actiongroups/ActionGroups_Interface.png" HotSpotTexturePath="Data/Default/actiongroups/ActionGroups_HotSpots.png">
+				<ColorActionMapping>
+					<ColorAction Color="0, 255, 0" Action="Settings">
+						<ButtonGraphic Action="Click" TexturePath="Data/Default/actiongroups/btn/bn-options_click.png" X="5" Y="4"/>
+						<ButtonGraphic Action="Hover" TexturePath="Data/Default/actiongroups/btn/bn-options_hover.png" X="5" Y="4"/>
+					</ColorAction>
+					<ColorAction Color="233, 0, 0" Action="Actiongroup0">
+						<ButtonGraphic Action="Click" TexturePath="Data/Default/actiongroups/btn/bn-ag-01_click.png" X="6" Y="38"/>
+						<ButtonGraphic Action="Hover" TexturePath="Data/Default/actiongroups/btn/bn-ag-01_hover.png" X="6" Y="38"/>
+					</ColorAction>
+					<ColorAction Color="188, 0, 0" Action="Actiongroup1">
+						<ButtonGraphic Action="Click" TexturePath="Data/Default/actiongroups/btn/bn-ag-02_click.png" X="41" Y="38"/>
+						<ButtonGraphic Action="Hover" TexturePath="Data/Default/actiongroups/btn/bn-ag-02_hover.png" X="41" Y="38"/>
+					</ColorAction>
+					<ColorAction Color="177, 0, 0" Action="Actiongroup2">
+						<ButtonGraphic Action="Click" TexturePath="Data/Default/actiongroups/btn/bn-ag-03_click.png" X="6" Y="65"/>
+						<ButtonGraphic Action="Hover" TexturePath="Data/Default/actiongroups/btn/bn-ag-03_hover.png" X="6" Y="65"/>
+					</ColorAction>
+					<ColorAction Color="166, 0, 0" Action="Actiongroup3">
+						<ButtonGraphic Action="Click" TexturePath="Data/Default/actiongroups/btn/bn-ag-04_click.png" X="41" Y="65"/>
+						<ButtonGraphic Action="Hover" TexturePath="Data/Default/actiongroups/btn/bn-ag-04_hover.png" X="41" Y="65"/>
+					</ColorAction>
+					<ColorAction Color="155, 0, 0" Action="Actiongroup4">
+						<ButtonGraphic Action="Click" TexturePath="Data/Default/actiongroups/btn/bn-ag-05_click.png" X="6" Y="91"/>
+						<ButtonGraphic Action="Hover" TexturePath="Data/Default/actiongroups/btn/bn-ag-05_hover.png" X="6" Y="91"/>
+					</ColorAction>
+					<ColorAction Color="144, 0, 0" Action="Actiongroup5">
+						<ButtonGraphic Action="Click" TexturePath="Data/Default/actiongroups/btn/bn-ag-06_click.png" X="41" Y="91"/>
+						<ButtonGraphic Action="Hover" TexturePath="Data/Default/actiongroups/btn/bn-ag-06_hover.png" X="41" Y="91"/>
+					</ColorAction>
+					<ColorAction Color="133, 0, 0" Action="Actiongroup6">
+						<ButtonGraphic Action="Click" TexturePath="Data/Default/actiongroups/btn/bn-ag-07_click.png" X="6" Y="118"/>
+						<ButtonGraphic Action="Hover" TexturePath="Data/Default/actiongroups/btn/bn-ag-07_hover.png" X="6" Y="118"/>
+					</ColorAction>
+					<ColorAction Color="122, 0, 0" Action="Actiongroup7">
+						<ButtonGraphic Action="Click" TexturePath="Data/Default/actiongroups/btn/bn-ag-08_click.png" X="41" Y="118"/>
+						<ButtonGraphic Action="Hover" TexturePath="Data/Default/actiongroups/btn/bn-ag-08_hover.png" X="41" Y="118"/>
+					</ColorAction>
+					<ColorAction Color="111, 0, 0" Action="Actiongroup8">
+						<ButtonGraphic Action="Click" TexturePath="Data/Default/actiongroups/btn/bn-ag-09_click.png" X="6" Y="144"/>
+						<ButtonGraphic Action="Hover" TexturePath="Data/Default/actiongroups/btn/bn-ag-09_hover.png" X="6" Y="144"/>
+					</ColorAction>
+					<ColorAction Color="99, 0, 0" Action="Actiongroup9">
+						<ButtonGraphic Action="Click" TexturePath="Data/Default/actiongroups/btn/bn-ag-10_click.png" X="41" Y="144"/>
+						<ButtonGraphic Action="Hover" TexturePath="Data/Default/actiongroups/btn/bn-ag-10_hover.png" X="41" Y="144"/>
+					</ColorAction>
+					</ColorActionMapping>
+			</SubInterface>
+			<!--<SubInterface Name="RCS-Panel" Alignment="Top" X="50" Y="12" TexturePath="Data/Default/rcs/RCSPanel_Interface.png" HotSpotTexturePath="Data/Default/rcs/RCSPanel_HotSpots.png">
+				<ColorActionMapping>
+					<ColorAction Color="30, 255, 30" Action="RCSPitchUp"/>
+					<ColorAction Color="40, 255, 40" Action="RCSPitchDown"/>
+					<ColorAction Color="20, 255, 20" Action="RCSYawRight"/>
+					<ColorAction Color="10, 255, 10" Action="RCSYawLeft"/>
+					<ColorAction Color="0, 20, 222" Action="RCSRollRight"/>
+					<ColorAction Color="0, 20, 199" Action="RCSRollLeft"/>
+					<ColorAction Color="0, 10, 255" Action="RCSAnalogCenter"/>
+					<ColorAction Color="0, 10, 166" Action="RCSAnalogUp"/>
+					<ColorAction Color="0, 10, 133" Action="RCSAnalogDown"/>
+					<ColorAction Color="0, 10, 222" Action="RCSAnalogLeft"/>
+					<ColorAction Color="0, 10, 199" Action="RCSAnalogRight"/>
+					<ColorAction Color="0, 10, 99" Action="RCSAnalogUpLeft"/>
+					<ColorAction Color="0, 10, 77" Action="RCSAnalogUpRight"/>
+					<ColorAction Color="0, 10, 88" Action="RCSAnalogDownLeft"/>
+					<ColorAction Color="0, 10, 66" Action="RCSAnalogDownRight"/>
+					<ColorAction Color="245, 245, 0" Action="Func0"/>
+					<ColorAction Color="235, 235, 0" Action="Func1"/>
+					<ColorAction Color="225, 225, 0" Action="Func2"/>
+					<ColorAction Color="215, 215, 0" Action="Func3"/>
+				</ColorActionMapping>
+			</SubInterface>-->
 			<ColorActionMapping>
-				<!-- Main Panel -->
 				<!-- Common Buttons -->
 				<ColorAction Color="248, 9, 9" Action="OpenClose" Name="MainInterface">
 					<ButtonGraphic Action="Hover" TexturePath="Data/Default/main/btn/bn-openclose_hover.png" X="208" Y="0"/>
@@ -83,7 +151,7 @@
 				</ColorAction>
 				<ColorAction Color="0, 0, 255" Action="AnalogCenter" Center="156, 133" Radius="35.0">
 					<ButtonGraphic Action="Hover" TexturePath="Data/Default/main/btn/bn-navarea-center_clickandhover.png" X="148" Y="125"/>
-          <ButtonGraphic Action="Click" TexturePath="Data/Default/main/btn/bn-navarea-center_normal.png" X="148" Y="125"/>
+					<ButtonGraphic Action="Click" TexturePath="Data/Default/main/btn/bn-navarea-center_normal.png" X="148" Y="125"/>
 				</ColorAction>
 				<ColorAction Color="0, 0, 166" Action="AnalogUp">
 					<ButtonGraphic Action="Click" TexturePath="Data/Default/main/btn/bn-navarea-up_click.png" X="134" Y="60"/>
@@ -117,40 +185,6 @@
 					<ButtonGraphic Action="Click" TexturePath="Data/Default/main/btn/bn-navarea-downright_click.png" X="169" Y="145"/>
 					<ButtonGraphic Action="Hover" TexturePath="Data/Default/main/btn/bn-navarea-downright_hover.png" X="169" Y="145"/>
 				</ColorAction>
-				<!-- Actiongroup Panel -->
-				<ColorAction Color="0, 255, 0" Action="Settings"/>
-				<ColorAction Color="233, 0, 0" Action="Actiongroup0"/>
-				<ColorAction Color="188, 0, 0" Action="Actiongroup1"/>
-				<ColorAction Color="177, 0, 0" Action="Actiongroup2"/>
-				<ColorAction Color="166, 0, 0" Action="Actiongroup3"/>
-				<ColorAction Color="155, 0, 0" Action="Actiongroup4"/>
-				<ColorAction Color="144, 0, 0" Action="Actiongroup5"/>
-				<ColorAction Color="133, 0, 0" Action="Actiongroup6"/>
-				<ColorAction Color="122, 0, 0" Action="Actiongroup7"/>
-				<ColorAction Color="111, 0, 0" Action="Actiongroup8"/>
-				<ColorAction Color="99, 0, 0" Action="Actiongroup9"/>
-				<!-- RCS Panel -->
-				<!-- Directions -->
-				<ColorAction Color="30, 255, 30" Action="RCSPitchUp"/>
-				<ColorAction Color="40, 255, 40" Action="RCSPitchDown"/>
-				<ColorAction Color="20, 255, 20" Action="RCSYawRight"/>
-				<ColorAction Color="10, 255, 10" Action="RCSYawLeft"/>
-				<ColorAction Color="0, 20, 222" Action="RCSRollRight"/>
-				<ColorAction Color="0, 20, 199" Action="RCSRollLeft"/>
-				<ColorAction Color="0, 10, 255" Action="RCSAnalogCenter"/>
-				<ColorAction Color="0, 10, 166" Action="RCSAnalogUp"/>
-				<ColorAction Color="0, 10, 133" Action="RCSAnalogDown"/>
-				<ColorAction Color="0, 10, 222" Action="RCSAnalogLeft"/>
-				<ColorAction Color="0, 10, 199" Action="RCSAnalogRight"/>
-				<ColorAction Color="0, 10, 99" Action="RCSAnalogUpLeft"/>
-				<ColorAction Color="0, 10, 77" Action="RCSAnalogUpRight"/>
-				<ColorAction Color="0, 10, 88" Action="RCSAnalogDownLeft"/>
-				<ColorAction Color="0, 10, 66" Action="RCSAnalogDownRight"/>
-				<!-- Function Buttons (not implemented) -->
-				<ColorAction Color="245, 245, 0" Action="Func0"/>
-				<ColorAction Color="235, 235, 0" Action="Func1"/>
-				<ColorAction Color="225, 225, 0" Action="Func2"/>
-				<ColorAction Color="215, 215, 0" Action="Func3"/>
 			</ColorActionMapping>
 		</Interface>
 	</Interfaces>
